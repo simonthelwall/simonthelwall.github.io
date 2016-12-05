@@ -123,3 +123,7 @@ library(devtools)
 httr::set_config(httr::use_proxy("123.123.123.123",8080)) # replace 123... with your proxy settings
 install_github("user/repository")
 ```
+
+## List of subpages
+
+ - [r_notes/bookdown](bookdown)

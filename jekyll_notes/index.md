@@ -24,3 +24,5 @@ Then put `{:toc}` directly underneath, so that the whole thing looks like:
 * TOC
 {:toc}
 ```
+
+This looks for headers indicated by the double hash and uses them to populate the table. 
