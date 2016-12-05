@@ -126,4 +126,4 @@ install_github("user/repository")
 
 ## List of subpages
 
- - [bookdown](r_notes/bookdown.html)
+ - [bookdown](r_notes/bookdown.md)
