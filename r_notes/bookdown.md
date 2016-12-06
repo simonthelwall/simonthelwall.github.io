@@ -14,3 +14,9 @@ All that's needed is an .Rmd file called index that has the following settings i
 output: bookdown::gitbook
 site: bookdown::bookdown_site
 ```
+
+Once ready, select the Build tab in RStudio (on my setup the top right quadrent of the interface), and click 'Build Book'.
+Bookdown will look for .Rmd files in the sathe files to reme directory and bundle them into a file (`_main.Rmd`) it creates itself. 
+Each .Rmd file will constitute a single chapter, with the first level header forming the chapter title and second level headers forming section titales.
+
+**Important note:** The bookdown files should not have their own YAML headers as with a normal .Rmd file, this causes the chapter sectioning to fail. 

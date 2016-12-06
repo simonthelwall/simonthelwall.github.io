@@ -26,3 +26,17 @@ Then put `{:toc}` directly underneath, so that the whole thing looks like:
 ```
 
 This looks for headers indicated by the double hash and uses them to populate the table. 
+
+## Subpages
+
+There are two options for having subpages. 
+The first is to have separately named pages in the root directory. 
+The second is to have subfolders, each containing a file named `index.md`. 
+Other subpages can then live in those subfolder. 
+This is the approach I've taken. 
+However, there is a slight downside to this, having multiple files named `index.md` can make it tricky to figure out what's changing in git bash. 
+Once you've set up a folder with a sub-page you can link to it with the usual markdown linking approach.
+
+```md
+ - [bookdown](bookdown.md)
+```
