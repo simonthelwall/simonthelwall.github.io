@@ -15,7 +15,7 @@ output: bookdown::gitbook
 site: bookdown::bookdown_site
 ```
 
-Once ready, select the Build tab in RStudio (on my setup the top right quadrent of the interface), and click 'Build Book'.
+Once ready, select the Build tab in RStudio (the top right quadrent of the interface on my setup), and click 'Build Book'.
 Bookdown will look for .Rmd files in the sathe files to reme directory and bundle them into a file (`_main.Rmd`) it creates itself. 
 Each .Rmd file will constitute a single chapter, with the first level header forming the chapter title and second level headers forming section titales.
 
