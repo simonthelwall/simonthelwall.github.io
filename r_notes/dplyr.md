@@ -9,6 +9,9 @@ Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 
+*TOC
+{:toc}
+
 ## The basics
 
 dplyr has, as described in the introductory documentation, "five basic data manipulation verbs that work on a single table: filter(), arrange(), select(), mutate() and summarise()."
@@ -23,7 +26,7 @@ I have a vector in a dataframe and I wish to determine whether I can detect any 
 I would normally use str_detect for this, but it doesn't work without a little trickery. 
 The `paste(something, collapse = "|")` is the important bit here. 
 
-```{r}
+```r
 test.data <- data.frame(item = c("Apple", "Bear", "Orange", "Pear", "Two Apples"))
 fruit <- c("Apple", "Orange", "Pear")
 test.data
@@ -49,7 +52,7 @@ test.data
 
 `mutate_each` or `summarise_each`
 
-```{r}
+```r
 dat <- dat %>% mutate_each(funs(mean), contains("date"))
 ```
 
@@ -57,7 +60,7 @@ At some points you might want to work on some columns and not others.
 Here it is easiest to create a vector to store your column names, which you can create with greps. 
 Requires lazyeval and NSE
 
-```{r}
+```r
 library(lazyeval)
 date_cols <- names(dat)[str_detect(names(dat), "date") == TRUE & 
                            str_detect(names(dat), "interactions") == FALSE]
@@ -70,21 +73,21 @@ dat %>% mutate_each_(funs(mean), date_cols)
 
 For example, you might want to specify removal of NA values in a sum or mean function. 
 You can do this by
-```{r}
+```r
 mutate_each(dat, funs(sum(., na.rm = TRUE))
 ```
 
 ##Subsetting (aka filtering)
 
 Much less verbose than `test[test$var1 == "something",]`
-```{r}
+```r
 filter(test, var1 == "something)
 ```
 
 But getting unique combinations is a little more awkward. 
 One can hijack `n_distinct()` introduced in dplyr to achieve this.
 
-```{r}
+```r
 test <- data.frame(id = c(1,1,1,2,2),
                      org = c("apple", "apple", "bear", "orange", "pear"),
                      test = c("S", "R","S", "R", "S"))
@@ -114,7 +117,7 @@ id    org test
 
 Uses the `summarise()` function. `n()` is a function introduced in dplyr and produces a count of the number of rows in the data set. 
 
-```{r}
+```r
 require(binom)
 require(dplyr)
 
@@ -153,7 +156,7 @@ Also, wrapping the `round()` and `binom.confint()` in a function would improve t
 
 There may be a variable name length limit in `group_by()`.
 
-```{r} 
+```r 
 test <- data.frame(name = rep(c("orange", "pear", "apple", "bear"), 2) , 
 +                    value = rnorm(8), stringsAsFactors = FALSE)
 
@@ -173,7 +176,7 @@ Error in eval(expr, envir, enclos) : index out of bounds
 
 This can be resolved using `quote()`.
 
-```{r}
+```r
 group_by(test, quote(reallyreallyreallyreallyreallylongvarname)) %>% summarise(mean(value))
 Source: local data frame [4 x 2]
 
@@ -191,7 +194,7 @@ The syntax is `rename(data, new.var = old.var)`.
 Note that there are no quotations marks. 
 e.g. 
 
-```{r}
+```r
 rename(iris, petal_length = Petal.Length) %>% head()
   Sepal.Length Sepal.Width petal_length Petal.Width Species
 1          5.1         3.5          1.4         0.2  setosa
@@ -205,7 +208,7 @@ rename(iris, petal_length = Petal.Length) %>% head()
 Variables can be dropped using `select(data, -var.name)`. 
 Or, if quicker, retained from a long list of variables, e.g. `select(data, var1, var2)`.
 
-```{r}
+```r
 select(iris, -Sepal.Length) %>% head
   Sepal.Width Petal.Length Petal.Width Species
 1         3.5          1.4         0.2  setosa
@@ -228,7 +231,7 @@ select(iris, -Sepal.Length) %>% head
 
 It's also possible to select columns based on text that the column name contains:
 
-```{r}
+```r
 pps <- pps %>% select(p.full.id, contains("_atc"))
 ```
 
@@ -236,7 +239,7 @@ thanks to: http://stackoverflow.com/questions/25923392/r-dplyr-select-columns-ba
 
 ## Lagged values and windows
 
-```{r}
+```r
 #  test windowed functions
 require(dplyr)
 
@@ -264,7 +267,7 @@ test
 
 Can be a little tricky and some of the information on the internet seems out of date. However, managed to wrap the following in a function to produce nice univariable tables. It does require a variable called obs though. This should be fixable with a little wrangling. 
 
-```{r}
+```r
 niceTable <- function(data = x, ...){
   # from https://groups.google.com/d/msg/manipulatr/htt0kO9Dhds/O5eVE2cfvsoJ
   z <- data %>% group_by_(...) %>% 
@@ -290,7 +293,7 @@ Done.
 Or so I thought. To go much further with this is actually quite difficult. 
 Let's try without wrapping in a function:
 
-```{r}
+```r
 require(dplyr)
 mtcars <- mtcars
 
@@ -308,7 +311,7 @@ Then, to get this in a function, one needs to supply more than one variable to t
 This turns out to be rather tricky. 
 One has to interpret the multiple variables supplied, otherwise you get all sorts of errors. 
 
-```{r}
+```r
 require(lazyeval) # I thought dplyr loaded this by default, but apparently not. 
 tabFun <- function(x, y, z){
   a <- x %>% group_by_(as.name(y)) %>% 
@@ -338,7 +341,7 @@ Took me a long time to find a solution for this.
 I tinkered around with `quote()` and `substitute()` for a bit. 
 I don't understand why a simple `mutate_()` doesn't work. 
 I don't really see the need for `[]` indexing, but the following allows you to avoid quotes in the call. 
-```{r}
+```r
 age_fun <- function(data, dob, sampledate){
  var1 <- deparse(substitute(dob))
  var2 <- deparse(substitute(sampledate))
@@ -352,7 +355,7 @@ from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-wi
 
 ## Wrapping filter in a function
 
-```{r}
+```r
 require(dplyr)
 data(mtcars)
 mtcars$name <- row.names(mtcars)
@@ -381,7 +384,7 @@ Adapted from: http://stackoverflow.com/questions/26492280/non-standard-evaluatio
 
 ## Using `select()` in a function
 
-```{r}
+```r
 require(dplyr)
 require(lazyeval)
 data(mtcars)
@@ -397,7 +400,7 @@ select_a_column(mtcars, "hp")
 
 ## Arrange in a function
 
-```{r}
+```r
 arrange_a_column <- function(data, column){
     z <- data %>% arrange_(lazyeval::interp(~var, var = as.name(column)))
 }
@@ -409,7 +412,7 @@ arrange_a_column(dat, "my_col_name")
 Technically possible, see broom and dplyr. 
 I haven't (yet) managed this for a `chisq.test()`, but: 
 
-```{r}
+```r
 test <- as.data.frame(structure(list(organism.species.name = c("ec", "ec", "kp"), 
                                      abx = c("ceph", "carb", "ceph"), 
                                      n_sus_start = c(5L, 5L, 10L), 
@@ -437,7 +440,7 @@ Groups: organism.species.name, abx
 
 ### wide to long
 
-```{r}
+```r
 stocks <- data.frame(
    time = as.Date('2009-01-01') + 0:9,
    X = rnorm(10, 0, 1),
@@ -476,7 +479,7 @@ See also `unite()` in tidyr
 
 If `spread()` tells you `"Error: All columns must be named"`, then you have `NA` values in your key column. 
 
-```{r}
+```r
 dat <- data_frame(
   Person = rep(c("greg", "sally", "sue"), each=2),
   Time = rep(c("Pre", "Post"), 3),
@@ -512,7 +515,7 @@ Source: local data frame [3 x 7]
 
 Very similar to plyr, but the function name specifies the type of join rather than specifying within the function. 
 
-```{r}
+```r
 data3 <- left_join(data1, data2, by = "common.var")
 ```
 See SQL Venn for reminders. 
@@ -520,7 +523,7 @@ See SQL Venn for reminders.
 Usefully, one can join by more than one variable. 
 This is useful when a single variable does not provide a unique identifier. 
 
-```{r}
+```r
 x <- data.frame(var1 = c(1,1,2), var2 = c("a", "b", "b"), var3 = c("x", "y", "z"))
 y <- data.frame(var1 = c(1,1,2), var2 = c("a", "b", "b"), var4 = c(20, 21, 22))
 x

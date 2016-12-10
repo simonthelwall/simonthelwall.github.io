@@ -127,3 +127,4 @@ install_github("user/repository")
 ## List of subpages
 
  - [bookdown](bookdown.md)
+ - [dplyr](dplyr.md)
