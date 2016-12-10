@@ -1,3 +1,5 @@
+# dplyr and tidyr
+
 dplyr is the replacement for plyr. 
 I used plyr a lot for my work, but the replacement should change things considerably, including by making it easier to create wrapper functions for split-apply-combine operations. 
 One of the particularly nice things is that for repetitive operations, it should be relatively easy to create wrapper functions to achieve this. 
@@ -6,14 +8,14 @@ One really nice feature is the ability to connect a series of commands in the sa
 Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
-## The basics
 
+## The basics
 
 dplyr has, as described in the introductory documentation, "five basic data manipulation verbs that work on a single table: filter(), arrange(), select(), mutate() and summarise()."
 
 ## Creating new variables
 
-Uses mutate
+Uses `mutate()`
 
 ### Detecting strings
 
@@ -32,7 +34,8 @@ test.data
 4 Pear
 5 Two Apples
 
-test.data <- test.data %>% mutate(is.fruit = str_detect(item, paste(fruit, collapse = "|")))
+test.data <- test.data %>% 
+    mutate(is.fruit = str_detect(item, paste(fruit, collapse = "|")))
 test.data
   item          is.fruit
 1 Apple         TRUE
@@ -80,6 +83,7 @@ filter(test, var1 == "something)
 
 But getting unique combinations is a little more awkward. 
 One can hijack `n_distinct()` introduced in dplyr to achieve this.
+
 ```{r}
 test <- data.frame(id = c(1,1,1,2,2),
                      org = c("apple", "apple", "bear", "orange", "pear"),
@@ -109,6 +113,7 @@ id    org test
 ## Summarising data
 
 Uses the `summarise()` function. `n()` is a function introduced in dplyr and produces a count of the number of rows in the data set. 
+
 ```{r}
 require(binom)
 require(dplyr)
@@ -147,6 +152,7 @@ Also, wrapping the `round()` and `binom.confint()` in a function would improve t
 ## Grouped operations
 
 There may be a variable name length limit in `group_by()`.
+
 ```{r} 
 test <- data.frame(name = rep(c("orange", "pear", "apple", "bear"), 2) , 
 +                    value = rnorm(8), stringsAsFactors = FALSE)
@@ -166,6 +172,7 @@ Error in eval(expr, envir, enclos) : index out of bounds
 ```
 
 This can be resolved using `quote()`.
+
 ```{r}
 group_by(test, quote(reallyreallyreallyreallyreallylongvarname)) %>% summarise(mean(value))
 Source: local data frame [4 x 2]
@@ -197,6 +204,7 @@ rename(iris, petal_length = Petal.Length) %>% head()
 
 Variables can be dropped using `select(data, -var.name)`. 
 Or, if quicker, retained from a long list of variables, e.g. `select(data, var1, var2)`.
+
 ```{r}
 select(iris, -Sepal.Length) %>% head
   Sepal.Width Petal.Length Petal.Width Species
@@ -219,9 +227,11 @@ select(iris, -Sepal.Length) %>% head
 ```
 
 It's also possible to select columns based on text that the column name contains:
+
 ```{r}
 pps <- pps %>% select(p.full.id, contains("_atc"))
 ```
+
 thanks to: http://stackoverflow.com/questions/25923392/r-dplyr-select-columns-based-on-string
 
 ## Lagged values and windows
@@ -274,6 +284,7 @@ Source: local data frame [2 x 4]
 1  0 18   56.2 56.25
 2  1 14  100.0 43.75
 ```
+
 Done.
 
 Or so I thought. To go much further with this is actually quite difficult. 
@@ -315,6 +326,7 @@ Source: local data frame [3 x 4]
 2   6  7     3 42.86
 3   8 14     2 14.29
 ```
+
 Phew. 
 
 Oh, and incidentally, trying to simplify this with n = n() returns the error `Error in n() : This function should not be called directly`. 
@@ -499,6 +511,7 @@ Source: local data frame [3 x 7]
 ## Joining
 
 Very similar to plyr, but the function name specifies the type of join rather than specifying within the function. 
+
 ```{r}
 data3 <- left_join(data1, data2, by = "common.var")
 ```
@@ -506,6 +519,7 @@ See SQL Venn for reminders.
 
 Usefully, one can join by more than one variable. 
 This is useful when a single variable does not provide a unique identifier. 
+
 ```{r}
 x <- data.frame(var1 = c(1,1,2), var2 = c("a", "b", "b"), var3 = c("x", "y", "z"))
 y <- data.frame(var1 = c(1,1,2), var2 = c("a", "b", "b"), var4 = c(20, 21, 22))
