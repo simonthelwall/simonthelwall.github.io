@@ -1,3 +1,7 @@
+---
+exclude: true
+---
+
 # dplyr and tidyr
 
 dplyr is the replacement for plyr. 
