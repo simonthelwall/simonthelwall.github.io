@@ -221,4 +221,11 @@ p
 
 ## Publication quality graphics
 
+Possibly useful for powerpoint
+```{r,eval=FALSE}
+options(bitmapType=”cairo”)
+ggsave(“test_ggsave_300.png”, width=14.11, height=14.11, unit=”cm”, dpi=300)
+```
+
+from https://mcfromnz.wordpress.com/2013/09/03/ggplot-powerpoint-wall-head-solution/#comment-487
 ## Maps
