@@ -3,6 +3,7 @@ layout: page
 title: bookdown notes
 tagline: Things I want to remember about using bookdown
 description: Some notes about using bookdown in a fairly disorganised collection
+exclude: true
 ---
 
 Bookdown makes it easy to write prose in markdown, code in R and compile both to well featured document that incorporates cross-references, a bibliography and captions.

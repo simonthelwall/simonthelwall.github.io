@@ -5,8 +5,7 @@ tagline: Things I want to remember about using R
 description: Some notes about using R in a fairly disorganised collection
 ---
 
- * TOC
- 
+* TOC
 {:toc}
 
 ## Getting data in
@@ -129,3 +128,4 @@ install_github("user/repository")
 
  - [bookdown](bookdown.md)
  - [dplyr](dplyr.md)
+ - [ggplot2](ggplot2.md)
