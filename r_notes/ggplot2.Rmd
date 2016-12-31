@@ -4,6 +4,7 @@ output:
     keep_md: true
     toc: true
     toc_float: true
+    exclude: true
 ---
 
 ggplot2 is awesome. 
