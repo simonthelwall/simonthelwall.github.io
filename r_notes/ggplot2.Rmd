@@ -1,6 +1,4 @@
 ---
-title: "ggplot2"
-date: "22 December 2016"
 output:
   html_document:
     keep_md: true
