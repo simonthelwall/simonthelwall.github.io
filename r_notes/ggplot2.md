@@ -1,6 +1,3 @@
----
-exclude: true
----
 
 ggplot2 is awesome. 
 The following notes are not a comprehensive guide to using it, but instead are reminders on how to do certain tricky things for future reference. 
