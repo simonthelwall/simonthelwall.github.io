@@ -13,7 +13,7 @@ Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 
-*TOC
+* TOC
 {:toc}
 
 ## The basics
@@ -345,6 +345,7 @@ Took me a long time to find a solution for this.
 I tinkered around with `quote()` and `substitute()` for a bit. 
 I don't understand why a simple `mutate_()` doesn't work. 
 I don't really see the need for `[]` indexing, but the following allows you to avoid quotes in the call. 
+
 ```r
 age_fun <- function(data, dob, sampledate){
  var1 <- deparse(substitute(dob))
