@@ -194,8 +194,11 @@ Source: local data frame [4 x 2]
 ### Adding a group id
 Sometime one might want to create an integer group id. 
 i.e. for all rows with the same groupings, these will have the same id. 
-`group_indices()` goes some of the way to resolve this. 
-Unfortunately, one can't use `group_indices()` in `mutate()`.
+`group_indices()` goes some of the way to resolve this by creating a vector of integers corresponding to the index numbers of the groups. 
+Unfortunately, one can't use `group_indices()` in `mutate()`, it returns an error.
+Therefore, one has to sort the dataframe by the grouping variables before adding in the id. 
+
+It's important to note that the data **must** be sorted prior to the creation of `i`, otherwise the `mutate(group_id = i)` will be in the wrong sort order.
 
 ```r
 library(dplyr)
