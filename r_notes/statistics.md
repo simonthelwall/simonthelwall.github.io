@@ -2,14 +2,12 @@
 exclude: true
 ---
 
-Statistics
-================
+# Statistics
 
 * TOC
 {:toc}
 
-Simple stats
-------------
+## Simple stats
 
 ### Percentiles
 
@@ -89,15 +87,16 @@ chisq.test(table(infert$education, infert$case))$expected
     ##   6-11yrs 79.838710 40.161290
     ##   12+ yrs 77.177419 38.822581
 
-Mantel-Haenzsel
----------------
+### Mantel-Haenzsel
 
 It pains me to say it, but I don't think the output from R for MH analysis is as neat as that from Stata. The package epicalc had a reasonable function, `mhor()`, but has been removed from CRAN.
 
 Base-r has `mantelhaen.test()` which 
+
 > Performs a Cochran-Mantel-Haenszel chi-squared test of the null that two nominal variables are conditionally independent in each stratum, assuming that there is no three-way interaction.
 
 However, 
+
 > Currently, no inference on homogeneity of the odds ratios is performed.
 
 i.e. there one can't use `mantelhaen.test()` to identify interaction, and the p-values obtained refer to the pooled odds ratio not being equal to one.
