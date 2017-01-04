@@ -191,6 +191,37 @@ Source: local data frame [4 x 2]
 4                                     pear -0.06635953
 ```
 
+### Adding a group id
+Sometime one might want to create an integer group id. 
+i.e. for all rows with the same groupings, these will have the same id. 
+`group_indices()` goes some of the way to resolve this. 
+Unfortunately, one can't use `group_indices()` in `mutate()`.
+
+```r
+library(dplyr)
+data(mtcars)
+mtcars <- mtcars %>% group_by(cyl, am) %>% arrange(cyl, am)
+i <- mtcars %>% group_indices(cyl, am)
+mtcars <- mtcars %>% ungroup() %>% mutate(group_id = i)
+mtcars %>% select(cyl, am, group_id)
+```
+
+```r
+# A tibble: 32 × 3
+     cyl    am group_id
+   <dbl> <dbl>    <int>
+1      4     0        1
+2      4     0        1
+3      4     0        1
+4      4     1        2
+5      4     1        2
+6      4     1        2
+7      4     1        2
+8      4     1        2
+9      4     1        2
+10     4     1        2
+```
+
 ## Dropping and renaming variables
 
 Variables can be renamed with `rename()`. 
