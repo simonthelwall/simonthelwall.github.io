@@ -8,6 +8,13 @@ description: Some notes about using R in a fairly disorganised collection
 * TOC
 {:toc}
 
+## List of subpages
+
+ - [bookdown](bookdown.md)
+ - [dplyr](dplyr.md)
+ - [ggplot2](ggplot2.md)
+ - [statistics](statistics.md)
+
 ## Getting data in
 First set the working directory
 
