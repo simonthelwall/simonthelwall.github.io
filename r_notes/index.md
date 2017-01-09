@@ -131,8 +131,3 @@ httr::set_config(httr::use_proxy("123.123.123.123",8080)) # replace 123... with 
 install_github("user/repository")
 ```
 
-## List of subpages
-
- - [bookdown](bookdown.md)
- - [dplyr](dplyr.md)
- - [ggplot2](ggplot2.md)
