@@ -81,7 +81,7 @@ You can do this by
 mutate_each(dat, funs(sum(., na.rm = TRUE))
 ```
 
-##Subsetting (aka filtering)
+## Subsetting (aka filtering)
 
 Much less verbose than `test[test$var1 == "something",]`
 ```r
