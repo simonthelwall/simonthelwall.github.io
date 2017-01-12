@@ -558,7 +558,38 @@ gather(stocks, stock, price, -time)
 
 ### Long to wide
 
-`spread()`
+`spread()` takes long data and makes it wide. 
+One specifies the `key` which contains the cells that will become column headers and then `value` column which contains the data that will go in the cells beneath the new columns.
+
+```r
+data(infert)
+long <- infert %>% 
+  mutate(id = seq_along(education)) %>% # create integer id
+  gather(key = variable, value = val, -id)
+
+head(long)
+
+# id  variable     val
+#  1 education  0-5yrs
+#  2 education  0-5yrs
+#  3 education  0-5yrs
+#  4 education  0-5yrs
+#  5 education 6-11yrs
+#  6 education 6-11yrs
+
+long %>% spread(key = variable, value = val) %>% 
+  head()
+  
+# id age case education induced parity pooled.stratum spontaneous stratum
+#  1  26    1    0-5yrs       1      6              3           2       1
+#  2  42    1    0-5yrs       1      1              1           0       2
+#  3  39    1    0-5yrs       2      6              4           0       3
+#  4  34    1    0-5yrs       2      4              2           0       4
+#  5  35    1   6-11yrs       1      3             32           1       5
+#  6  36    1   6-11yrs       2      4             36           1       6
+
+```
+
 For a more complex approach see [this SO post](http://stackoverflow.com/questions/30592094/r-spreading-multiple-columns-with-tidyr#30592293).
 
 See also `unite()` in tidyr
