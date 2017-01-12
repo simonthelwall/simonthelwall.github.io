@@ -52,7 +52,7 @@ test.data
 5 Two Apples    TRUE
 ```
 
-## Replacing values with dplyr functions
+### Replacing values with dplyr functions
 
 Can use `recode()` or `case_when()`. 
 `recode()` is a vectorised switch. 
