@@ -51,7 +51,9 @@ test.data
 4 Pear          TRUE
 5 Two Apples    TRUE
 ```
+
 ## Replacing values with dplyr functions
+
 Can use `recode()` or `case_when()`. 
 `recode()` is a vectorised switch. 
 It's important to note that the data types must be the same when using `recode()`, and that a double is not the same type as an integer, which seems obvious when typed. 
@@ -556,7 +558,7 @@ gather(stocks, stock, price, -time)
 6  2009-01-06     X  1.4262145
 ```
 
-### Long to wide
+### long to wide
 
 `spread()` takes long data and makes it wide. 
 One specifies the `key` which contains the cells that will become column headers and then `value` column which contains the data that will go in the cells beneath the new columns.
