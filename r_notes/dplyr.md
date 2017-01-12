@@ -51,6 +51,53 @@ test.data
 4 Pear          TRUE
 5 Two Apples    TRUE
 ```
+## Replacing values with dplyr functions
+Can use `recode()` or `case_when()`. 
+`recode()` is a vectorised switch. 
+It's important to note that the data types must be the same when using `recode()`, and that a double is not the same type as an integer, which seems obvious when typed. 
+If they are not the same type, then unspecified replacements get NA values. 
+
+```r
+mtcars %>% 
+  mutate(new_cyl = recode(cyl, `6` = 16, `8` = 200)
+         ) %>% 
+  select(cyl, new_cyl) %>% 
+  tbl_df() %>%
+  head()
+  
+# A tibble: 6 × 2
+    cyl new_cyl
+  <dbl>   <dbl>
+1     6      16
+2     6      16
+3     4       4
+4     6      16
+5     8     200
+6     6      16
+```
+
+`case_when()` vectorises multiple `if()` `else()` statements, and it's a lot neater than writing nested `ifelse()` statements. 
+`case_when()` can be used inside a `mutate()` call, or outside. 
+If inside, then `.$` needs to be used to specify the column upon which tests should be predicated. 
+
+```r
+mtcars %>% 
+  mutate(new_cyl = case_when(.$cyl == 4 ~ "Four", 
+                             .$cyl == 6 ~ "Six", 
+                             .$cyl == 8 ~ "Eight"
+                             )
+  ) %>% 
+  select(cyl, new_cyl) %>% 
+  head()
+
+  cyl new_cyl
+1   6     Six
+2   6     Six
+3   4    Four
+4   6     Six
+5   8   Eight
+6   6     Six
+```
 
 ## Working on multiple columns at once
 
