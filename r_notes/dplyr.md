@@ -143,6 +143,30 @@ mtcars %>%
   
 ```
 
+This also works for detecting strings in columns. 
+It's a bit weird giving the `TRUE ~ 0` for the non-true cases. 
+I tried `FALSE ~ 0` and that doesn't work. 
+
+```r
+library(stringr)
+mtcars$name <- row.names(mtcars)
+names_to_detect <- c("Mazda", "Datsun")
+
+mtcars %>% 
+  mutate(has_name = case_when(
+    str_detect(.$name, paste(names_to_detect, collapse = "|")) == TRUE ~ 1, 
+    TRUE ~ 0)
+    )%>% 
+  select(name, has_name) %>% head()
+                 name has_name
+1         Mazda RX4        1
+2     Mazda RX4 Wag        1
+3        Datsun 710        1
+4    Hornet 4 Drive        0
+5 Hornet Sportabout        0
+6           Valiant        0
+```
+
 ## Working on multiple columns at once
 
 `mutate_each` or `summarise_each`
