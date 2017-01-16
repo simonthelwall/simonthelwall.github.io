@@ -101,6 +101,48 @@ mtcars %>%
 6   6     Six
 ```
 
+There's an important gotcha here though. 
+One has to make sure that each possible outcome is specified, otherwise unspecified levels are replaced with `<NA>` values.
+One can work around this as in the second example. 
+I haven't yet tested what will happen if numeric output is required, I expect that one would need `TRUE ~ as.double(.$cyl)`.
+For numeric columns, it's also worth remembering that integer data types are not the same as other numeric data types such as doubles and so `as.numeric()` may still return `<NA>` values.
+
+```r
+mtcars %>% 
+  mutate( cyl2 = case_when(
+    .$cyl == 4 ~ "four"
+  )
+  ) %>% 
+  select(cyl, cyl2) %>% 
+  head()
+
+  cyl cyl2
+1   6 <NA>
+2   6 <NA>
+3   4 four
+4   6 <NA>
+5   8 <NA>
+6   6 <NA>
+
+mtcars %>% 
+  mutate( cyl2 = case_when(
+        .$cyl == 4 ~ "four", 
+        TRUE ~ as.character(.$cyl)
+    )
+          ) %>% 
+  select(cyl, cyl2) %>% 
+  head()
+  
+    cyl cyl2
+1   6    6
+2   6    6
+3   4 four
+4   6    6
+5   8    8
+6   6    6
+  
+```
+
 ## Working on multiple columns at once
 
 `mutate_each` or `summarise_each`
