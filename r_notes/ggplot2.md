@@ -1,6 +1,6 @@
 ---
 exclude: true
----
+--- 
 
 ggplot2 is awesome. 
 The following notes are not a comprehensive guide to using it, but instead are reminders on how to do certain tricky things for future reference. 
@@ -18,13 +18,6 @@ A basic plot would look something like this
 
 ```r
 library(ggplot2)
-```
-
-```
-## Warning: package 'ggplot2' was built under R version 3.3.2
-```
-
-```r
 data(mtcars)
 p <- ggplot(data = mtcars, aes(x = wt, y = mpg, colour = cyl)) + 
   geom_point()
@@ -243,7 +236,9 @@ ggsave(filename = "filename.extension", plot, width = 7, height = 4, dpi = 300)
 It's also worth noting that `dingbats = FALSE` may reduce file size and prevent editors from getting upset.
 
 ## Titles, captions and cross-references
+
 ### ggplot2
+
 ggplot supports titles, subtitles and footnotes (called captions). 
 Title defaults to centre justification, subtitle to left and caption to right. 
 This can be overridden with `theme()` as below.
@@ -264,15 +259,74 @@ p
 ![](ggplot2_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
 
 ### Markdown/knitr
+
 ### captioner package
+
+## Time series graphs
+
+Axes can be set to date format  with `scale_x_date()` and the defaults tend to look pretty good. 
+
+
+```r
+last_month <- Sys.Date() - 0:730
+df <- data.frame(
+  date = last_month,
+  price = runif(731)
+)
+base <- ggplot(df, aes(date, price)) +
+  geom_line() + 
+  scale_x_date(date_minor_breaks = "1 month", date_breaks = "1 year", 
+               date_labels = c("%Y"))
+
+base
+```
+
+![](ggplot2_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+
+However, one may wish to mimic the Excel approach to have two-level x-axes. 
+from [SO post here](http://stackoverflow.com/questions/20571306/multi-row-x-axis-labels-in-ggplot-line-chart)
+
+
+```r
+set.seed(1)
+df=data.frame(year=rep(2009:2013,each=4),
+              quarter=rep(c("Q1","Q2","Q3","Q4"),5),
+              sales=40:59+rnorm(20,sd=5))
+
+g1 <- ggplot(data = df, aes(x = interaction(year, quarter, 
+                                            lex.order = TRUE), 
+                            y = sales, group = 1)) +
+  geom_line(colour = "blue") +
+  coord_cartesian(ylim = c(35, 65), expand = FALSE) +
+  annotate(geom = "text", x = seq_len(nrow(df)), y = 34, 
+           label = df$quarter, size = 4) +
+  annotate(geom = "text", x = 2.5 + 4 * (0:4), y = 32, 
+           label = unique(df$year), size = 6)  +
+  # theme_bw()
+  # +
+theme(plot.margin = unit(c(1, 1, 4, 1), "lines"),
+      axis.title.x = element_blank(),
+      axis.text.x = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+      )
+
+
+# remove clipping of x axis labels
+g2 <- ggplot_gtable(ggplot_build(g1))
+g2$layout$clip[g2$layout$name == "panel"] <- "off"
+grid::grid.draw(g2)
+```
+
+![](ggplot2_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 ## Publication quality graphics
 
 Possibly useful for powerpoint
 
 ```r
-options(bitmapType=”cairo”)
-ggsave(“test_ggsave_300.png”, width=14.11, height=14.11, unit=”cm”, dpi=300)
+options(bitmapType="cairo")
+ggsave("test_ggsave_300.png"", width=14.11, height=14.11, unit="cm", dpi=300)
 ```
 
 from https://mcfromnz.wordpress.com/2013/09/03/ggplot-powerpoint-wall-head-solution/#comment-487

@@ -227,6 +227,11 @@ p
 Axes can be set to date format  with `scale_x_date()` and the defaults tend to look pretty good. 
 
 ```{r}
+last_month <- Sys.Date() - 0:730
+df <- data.frame(
+  date = last_month,
+  price = runif(731)
+)
 base <- ggplot(df, aes(date, price)) +
   geom_line() + 
   scale_x_date(date_minor_breaks = "1 month", date_breaks = "1 year", 
@@ -273,8 +278,8 @@ grid::grid.draw(g2)
 
 Possibly useful for powerpoint
 ```{r,eval=FALSE}
-options(bitmapType=”cairo”)
-ggsave(“test_ggsave_300.png”, width=14.11, height=14.11, unit=”cm”, dpi=300)
+options(bitmapType="cairo")
+ggsave("test_ggsave_300.png"", width=14.11, height=14.11, unit="cm", dpi=300)
 ```
 
 from https://mcfromnz.wordpress.com/2013/09/03/ggplot-powerpoint-wall-head-solution/#comment-487
