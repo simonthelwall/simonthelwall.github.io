@@ -2,6 +2,9 @@
 exclude: true
 --- 
 
+* TOC
+{:toc}
+
 ggplot2 is awesome. 
 The following notes are not a comprehensive guide to using it, but instead are reminders on how to do certain tricky things for future reference. 
 The official user guides are [here](http://docs.ggplot2.org/current/)
@@ -326,7 +329,7 @@ Possibly useful for powerpoint
 
 ```r
 options(bitmapType="cairo")
-ggsave("test_ggsave_300.png"", width=14.11, height=14.11, unit="cm", dpi=300)
+ggsave("test_ggsave_300.png", width=14.11, height=14.11, unit="cm", dpi=300)
 ```
 
 from https://mcfromnz.wordpress.com/2013/09/03/ggplot-powerpoint-wall-head-solution/#comment-487
