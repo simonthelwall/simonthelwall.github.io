@@ -323,6 +323,8 @@ grid::grid.draw(g2)
 
 ![](ggplot2_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
+It's worth noting that the above works well for an Rscript, but I've been advised that to get it to work in a markdown doc, the final line `grid:grid.draw(g2)` should be replaced with `plot(g2)`.
+
 ## Publication quality graphics
 
 Possibly useful for powerpoint
