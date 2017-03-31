@@ -14,6 +14,7 @@ description: Some notes about using R in a fairly disorganised collection
  - [dplyr](dplyr.md)
  - [ggplot2](ggplot2.md)
  - [statistics](statistics.md)
+ - [packages](packages.md)
 
 ## Getting data in
 First set the working directory
