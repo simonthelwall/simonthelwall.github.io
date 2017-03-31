@@ -112,6 +112,16 @@ git branch -d [branchname]
 
 This can be done from the master branch.
 
+### Merging only specific files
+
+from `devbranch`
+thanks to [this blog post](http://jasonrudolph.com/blog/2009/02/25/git-tip-how-to-merge-specific-files-from-another-branch/)
+
+```git
+git checkout master
+git checkout dev_branch file1.R file2.R subdirectory/file3.R
+```
+
 ## Resolving conflicts
 
 I'm not great at this at all. I've installed meld from the software centre and configured git to use meld as the merge tool using
