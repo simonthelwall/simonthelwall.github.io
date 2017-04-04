@@ -2,3 +2,20 @@ _site
 .sass-cache
 .jekyll-metadata
 r_notes/ggplot2.html
+
+*.dbf
+*.fix
+*.prj
+*.qix
+*.shp
+*.shx
+*.zip
+*.gal
+
+# knitr and R markdown default cache directories
+/*_cache/
+/cache/
+
+*.rdx
+*.rdb
+*.RData

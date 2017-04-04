@@ -1,0 +1,136 @@
+---
+output: 
+  html_document: 
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+These are some really basic notes on spatial statistics, made as I read Applied Spatial Data Analysis with R, by R. S. Bivand *et al*.
+
+## General approach
+
+ 1. Create a neighbour list
+ 1. Create neighbour weights
+ 1. Investigate spatial autocorrelation
+ 1. Investigate heterogeneity
+ 1. Model for clusters
+ 1. Map clusters
+ 
+## Examining the data
+
+ * `Z` log-trandformed rate
+ * `PCTOWNHOME` percent population owning own home
+ * `PCTAGE65P` percent population age >/= 65
+ * `PEXPOSURE` inverse distance to closest TCE site (Trichloroethane)
+
+```{r load-in-data}
+# stupid, stupid, stupid win10
+library(sp, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
+library(rgdal, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
+library(spdep, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
+library(DCluster, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
+
+# data from http://asdar-book.org/datasets.php?dataset=15
+ny8 <- readOGR(".", "NY8_utm18")
+head(ny8, n = 1)
+# read in neighbour file. 
+ny_nb <- read.gal("NY_nb.gal", region.id = row.names(as(ny8, "data.frame")))
+class(ny_nb)
+head(ny_nb)
+```
+ 
+The New York data has 281 census tract observations, covering both sparsely populated rural areas and densely populated urban areas.
+Cases of leukaemia are recorded by tract. 
+ 
+## Creating a neighbour list
+
+Creates a matrix with one row for each area in data set. 
+Demonstrated on a subset of the NY data.
+These are contiguity neighbours. 
+Areas with adjoining borders are neighbours. 
+Other methods are available, such as distance.
+
+```{r neighbour-list}
+syr <- ny8[ny8$AREANAME == "Syracuse city", ]
+sy_nb <- poly2nb(syr)
+coords <- coordinates(syr) # just for plotting
+plot(syr)
+plot(sy_nb, coords, add = TRUE)
+rm(coords)
+```
+
+## Calculating spatial weights
+
+Conversion style `W` by default. 
+Weights for each area are standardised to sum to 1
+
+```{r spatial-weights}
+syr_wts <- nb2listw(sy_nb)
+syr_wts
+```
+
+## Spatial autocorrelation
+Using the complete New York data. 
+Tests for spatial autocorrelation in number of cases by census tract.
+Observe significant spatial autocorrelation, with neighbouring areas having similar values. 
+
+```{r morans-I}
+moran.test(ny8$Cases, listw = nb2listw(ny_nb))
+```
+
+## Simultaneous autoregressive models
+Uses a regression on values from other areas to account for spatial dependence. 
+
+```{r sar}
+# spautolm() from spdep
+ny_sar <- spautolm(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME, data = ny8, 
+                   listw = nb2listw(ny_nb, style = "B"))
+summary(ny_sar)
+```
+
+Lambda = 0.04, p = 0.02 indicates significant spatial correlation in residuals. 
+
+Alternatively, can weight by population of census tracts:
+(not currently run as I don't know where POPS came frome)
+```{r}
+ny_lm <- lm(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME, data = ny8, 
+                   weights = POP8)
+summary(ny_lm)
+```
+
+Can also use population weights in a `spautolm` model
+```{r}
+ny_sar2 <- spautolm(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME, data = ny8, 
+                   listw = nb2listw(ny_nb, style = "B"), weights = POP8)
+summary(ny_sar2)
+```
+Interesting results from this. 
+There is no longer spatial autocorrelation, and proximity to TCE site is now significant.
+Lower AIC values indicate better model fits. 
+
+## Conditional autoregressive models
+Conditional distribution of spatial error terms. 
+Only spatial errors of neighbours are used, rather than all spatial errors. 
+
+```{r}
+ny_car <- spautolm(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME, data = ny8, 
+                   listw = nb2listw(ny_nb, style = "B"), weights = POP8, 
+                   family = "CAR")
+summary(ny_car)
+```
+```
+
+## Calculating expected cases
+ 1. Calculate the overall rate
+ 1. Multiply population at geographical unit by rate to get expected cases at geographical unit (p. 314)
+ 
+## Detecting clusters of disease
+```{r, eval=FALSE}
+library(DCluster)
+```
+ 1. First test homogeneity of relative risks
+  * Chisq test for differences between expected and observed values as above. `DCluster::achisq.test()`
