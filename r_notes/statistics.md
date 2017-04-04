@@ -201,7 +201,7 @@ anova(m1,m2)
 
 Or by polynomial regression
 
-# Polynomial regression
+## Polynomial regression
 
 
 ```r
@@ -264,7 +264,7 @@ p
 ![](statistics_files/figure-markdown_github/polynomial-1.png)<!-- -->
 
 
-### Obtaining the number of observations from a regression
+## Obtaining the number of observations from a regression
 
 I can't believe it's taken me this long to discover
 
