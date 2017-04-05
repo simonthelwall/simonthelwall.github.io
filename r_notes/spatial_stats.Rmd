@@ -122,15 +122,92 @@ ny_car <- spautolm(Z ~ PEXPOSURE + PCTAGE65P + PCTOWNHOME, data = ny8,
                    family = "CAR")
 summary(ny_car)
 ```
-```
+
 
 ## Calculating expected cases
  1. Calculate the overall rate
  1. Multiply population at geographical unit by rate to get expected cases at geographical unit (p. 314)
  
 ## Detecting clusters of disease
-```{r, eval=FALSE}
-library(DCluster)
+
+```{r new-data}
+rm(list = ls())
+data("nc.sids")
+ls()
+class(nc.sids)
+head(nc.sids)
 ```
+
+Functions used later in this process have absolute requirements for two columns:
+`Observed` and `Expected`. 
+
+This next process calculates these values
+```{r}
+nc.sids$Observed <- nc.sids$SID74
+nc.sids$Population <- nc.sids$BIR74
+r <- sum(nc.sids$Observed) / sum(nc.sids$Population)
+nc.sids$Expected <- nc.sids$Population * r
+nc.sids$smr <- nc.sids$Observed/nc.sids$Expected
+```
+
  1. First test homogeneity of relative risks
   * Chisq test for differences between expected and observed values as above. `DCluster::achisq.test()`
+
+Requires a data frame for input. 
+If you are using a spatialpoly, you can use `as(poly_name, "data.frame")
+or `poly_name@data`
+
+```{r homogeneity}
+achisq.test(Observed ~ offset(log(Expected)),
+            data = nc.sids, model = "multinom", 999)
+```
+
+There is significant evidence of overdispersion. 
+
+```{r}
+pottwhitt.test(Observed ~ offset(log(Expected)),
+            data = nc.sids, model = "multinom", 999)
+```
+
+## Tango's test of global clustering
+
+```{r}
+coords <- cbind(nc.sids$x, nc.sids$y)
+dlist <- dnearneigh(coords, 0, Inf)
+dlist <- include.self(dlist)
+dlist.d <- nbdists(dlist, coords = coords)
+phi <- 100
+col.W.tango <- nb2listw(dlist, 
+                        glist = lapply(dlist.d, 
+                                       function(x, phi){
+                          exp(-x/phi)
+                        }, phi = phi), style = "C")
+
+tango.test(Observed ~ offset(log(Expected)),
+           data = nc.sids, model = "negbin", 999, listw = col.W.tango, 
+           zero.policy = TRUE)
+```
+
+## Locating clusters
+Using Kulldorf's statistic
+`calculate.mle()` requires `Expected` and `Observed` and data as a data.frame
+
+```{r}
+mle <- calculate.mle(nc.sids, model = "negbin")
+the_grid <- nc.sids[, c("x", "y")] # another data.frame
+knresults <- opgam(data = nc.sids, thegrid = the_grid, alpha = 0.05,
+                   iscluster = kn.iscluster, 
+                   fractpop = 0.15, # fraction of total population to use
+                   R = 99, # Number of repetitions for bootstrapping
+                   model = "negbin", mle = mle)
+knresults
+```
+
+### Plot clusters
+
+```{r plot}
+#Plot centroids
+plot(nc.sids$x, nc.sids$y, xlab="Easting", ylab="Northing")
+#Plot points marked as clusters
+points(knresults$x, knresults$y, col="red", pch="*")
+```
