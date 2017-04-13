@@ -147,3 +147,23 @@ One can remove multiple deleted files from the repo using the following command.
 ```git
 git rm $(git -ls --deleted)
 ```
+
+## Working with multiple remotes
+I have an internal work remote and this github remote. 
+When I'm at work, I'm behind a corporate proxy and so need to do the following to set it up
+```git
+git config --global http.proxy http://proxy.address:portno
+git config --global https.proxy https://proxy.address:portno
+```
+
+### push
+
+```git
+git push --mirror https://github.com/simonthelwall/nicethings.git
+```
+
+### pull
+
+```git
+git push https://github.com/simonthelwall/nicethings.git
+```
