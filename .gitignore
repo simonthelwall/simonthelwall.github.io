@@ -19,3 +19,4 @@ r_notes/ggplot2.html
 *.rdx
 *.rdb
 *.RData
+*.Rhistory
