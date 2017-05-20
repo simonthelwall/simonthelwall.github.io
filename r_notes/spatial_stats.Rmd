@@ -2,6 +2,7 @@
 output: 
   html_document: 
     keep_md: true
+    exclude: true
 ---
 
 ```{r setup, include=FALSE}
