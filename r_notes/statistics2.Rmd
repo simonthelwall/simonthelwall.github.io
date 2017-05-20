@@ -3,6 +3,7 @@ title: "statistics"
 output: 
   html_document:
     keep_md: true
+    exclude: true
 ---
 
 ```{r, setup, echo = FALSE}
