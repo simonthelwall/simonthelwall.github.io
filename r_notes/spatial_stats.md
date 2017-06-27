@@ -5,7 +5,6 @@ exclude: true
 * TOC
 {:toc}
 
-
 These are some really basic notes on spatial statistics, made as I read Applied Spatial Data Analysis with R, by R. S. Bivand *et al*.
 
 ## General approach
@@ -27,37 +26,8 @@ These are some really basic notes on spatial statistics, made as I read Applied 
 
 ```r
 # stupid, stupid, stupid win10
-library(sp, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
-```
-
-```
-## Warning: package 'sp' was built under R version 3.3.3
-```
-
-```r
-library(rgdal, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
-```
-
-```
-## Warning: package 'rgdal' was built under R version 3.3.3
-```
-
-```
-## rgdal: version: 1.2-5, (SVN revision 648)
-##  Geospatial Data Abstraction Library extensions to R successfully loaded
-##  Loaded GDAL runtime: GDAL 2.0.1, released 2015/09/15
-##  Path to GDAL shared files: C:/Users/simon/OneDrive/Documents/R/win-library/3.3/rgdal/gdal
-##  Loaded PROJ.4 runtime: Rel. 4.9.2, 08 September 2015, [PJ_VERSION: 492]
-##  Path to PROJ.4 shared files: C:/Users/simon/OneDrive/Documents/R/win-library/3.3/rgdal/proj
-##  Linking to sp version: 1.2-4
-```
-
-```r
-library(spdep, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
-```
-
-```
-## Warning: package 'spdep' was built under R version 3.3.3
+library(sp)
+library(spdep) # for read.gal
 ```
 
 ```
@@ -65,11 +35,21 @@ library(spdep, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
 ```
 
 ```r
-library(DCluster, lib.loc = "C:/Users/simon/OneDrive/Documents/R/win-library/3.3")
+library(rgdal)
 ```
 
 ```
-## Warning: package 'DCluster' was built under R version 3.3.3
+## rgdal: version: 1.2-7, (SVN revision 660)
+##  Geospatial Data Abstraction Library extensions to R successfully loaded
+##  Loaded GDAL runtime: GDAL 2.0.1, released 2015/09/15
+##  Path to GDAL shared files: C:/Users/simon.thelwall/Documents/R/win-library/3.4/rgdal/gdal
+##  Loaded PROJ.4 runtime: Rel. 4.9.2, 08 September 2015, [PJ_VERSION: 492]
+##  Path to PROJ.4 shared files: C:/Users/simon.thelwall/Documents/R/win-library/3.4/rgdal/proj
+##  Linking to sp version: 1.2-4
+```
+
+```r
+library(DCluster)
 ```
 
 ```
@@ -342,7 +322,7 @@ summary(ny_sar)
 ## PCTOWNHOME  -0.419890   0.191329 -2.1946 0.0281930
 ## 
 ## Lambda: 0.040487 LR test value: 5.2438 p-value: 0.022026 
-## Numerical Hessian standard error of lambda: 0.017199 
+## Numerical Hessian standard error of lambda: 0.017192 
 ## 
 ## Log likelihood: -276.1069 
 ## ML residual variance (sigma squared): 0.41388, (sigma: 0.64333)
@@ -412,7 +392,7 @@ summary(ny_sar2)
 ## PCTOWNHOME  -0.380778   0.156507 -2.4330  0.014975
 ## 
 ## Lambda: 0.0095636 LR test value: 0.32665 p-value: 0.56764 
-## Numerical Hessian standard error of lambda: 0.016466 
+## Numerical Hessian standard error of lambda: 0.016529 
 ## 
 ## Log likelihood: -251.6017 
 ## ML residual variance (sigma squared): 1104.1, (sigma: 33.229)
@@ -454,7 +434,7 @@ summary(ny_car)
 ## PCTOWNHOME  -0.386820   0.157436 -2.4570  0.014010
 ## 
 ## Lambda: 0.022419 LR test value: 0.38785 p-value: 0.53343 
-## Numerical Hessian standard error of lambda: 0.038543 
+## Numerical Hessian standard error of lambda: 0.038928 
 ## 
 ## Log likelihood: -251.5711 
 ## ML residual variance (sigma squared): 1102.9, (sigma: 33.21)
@@ -462,7 +442,7 @@ summary(ny_car)
 ## Number of parameters estimated: 6 
 ## AIC: 515.14
 ```
-```
+
 
 ## Calculating expected cases
  1. Calculate the overall rate
@@ -470,8 +450,172 @@ summary(ny_car)
  
 ## Detecting clusters of disease
 
+
 ```r
-library(DCluster)
+rm(list = ls())
+data("nc.sids")
+ls()
 ```
+
+```
+## [1] "nc.sids"   "ncCC89.nb" "ncCR85.nb" "sidscents" "sidspolys"
+```
+
+```r
+class(nc.sids)
+```
+
+```
+## [1] "data.frame"
+```
+
+```r
+head(nc.sids)
+```
+
+```
+##             CNTY.ID BIR74 SID74 NWBIR74 BIR79 SID79 NWBIR79 east north
+## Ashe           1825  1091     1      10  1364     0      19  164   176
+## Alleghany      1827   487     0      10   542     3      12  183   182
+## Surry          1828  3188     5     208  3616     6     260  204   174
+## Currituck      1831   508     1     123   830     2     145  461   182
+## Northampton    1832  1421     9    1066  1606     3    1197  385   176
+## Hertford       1833  1452     7     954  1838     5    1237  411   176
+##                  x       y       lon      lat L.id M.id
+## Ashe        -81.67 4052.29 -81.48594 36.43940    1    2
+## Alleghany   -50.06 4059.70 -81.14061 36.52443    1    2
+## Surry       -16.14 4043.76 -80.75312 36.40033    1    2
+## Currituck   406.01 4035.10 -76.04892 36.45655    1    4
+## Northampton 281.10 4029.75 -77.44057 36.38799    1    4
+## Hertford    323.77 4028.10 -76.96474 36.38189    1    4
+```
+
+Functions used later in this process have absolute requirements for two columns:
+`Observed` and `Expected`. 
+
+This next process calculates these values
+
+```r
+nc.sids$Observed <- nc.sids$SID74
+nc.sids$Population <- nc.sids$BIR74
+r <- sum(nc.sids$Observed) / sum(nc.sids$Population)
+nc.sids$Expected <- nc.sids$Population * r
+nc.sids$smr <- nc.sids$Observed/nc.sids$Expected
+```
+
  1. First test homogeneity of relative risks
   * Chisq test for differences between expected and observed values as above. `DCluster::achisq.test()`
+
+Requires a data frame for input. 
+If you are using a spatialpoly, you can use `as(poly_name, "data.frame")
+or `poly_name@data`
+
+
+```r
+DCluster::achisq.test(Observed ~ offset(log(Expected)),
+            data = nc.sids, model = "multinom", 999)
+```
+
+```
+## Chi-square test for overdispersion 
+## 
+## 	Type of boots.: parametric 
+## 	Model used when sampling: Multinomial 
+## 	Number of simulations: 999 
+## 	Statistic:  225.5723 
+## 	p-value :  0.001
+```
+
+There is significant evidence of overdispersion. 
+
+
+```r
+DCluster::pottwhitt.test(Observed ~ offset(log(Expected)),
+            data = nc.sids, model = "multinom", 999)
+```
+
+```
+## Potthoff-Whittinghill's test of overdispersion 
+## 
+## 	Type of boots.: parametric 
+## 	Model used when sampling: Multinomial 
+## 	Number of simulations: 999 
+## 	Statistic:  527848.8 
+## 	p-value :  0.001
+```
+
+## Tango's test of global clustering
+
+
+```r
+coords <- cbind(nc.sids$x, nc.sids$y)
+dlist <- dnearneigh(coords, 0, Inf)
+dlist <- include.self(dlist)
+dlist.d <- nbdists(dlist, coords = coords)
+phi <- 100
+col.W.tango <- nb2listw(dlist, 
+                        glist = lapply(dlist.d, 
+                                       function(x, phi){
+                          exp(-x/phi)
+                        }, phi = phi), style = "C")
+
+DCluster::tango.test(Observed ~ offset(log(Expected)),
+           data = nc.sids, model = "negbin", 999, listw = col.W.tango, 
+           zero.policy = TRUE)
+```
+
+```
+## Tango's test of global clustering 
+## 
+## 	Type of boots.: parametric 
+## 	Model used when sampling: Negative Binomial 
+## 	Number of simulations: 999 
+## 	Statistic:  0.000483898 
+## 	p-value :  0.044
+```
+
+## Locating clusters
+Using Kulldorf's statistic
+`calculate.mle()` requires `Expected` and `Observed` and data as a data.frame
+
+
+```r
+mle <- DCluster::calculate.mle(nc.sids, model = "negbin")
+the_grid <- nc.sids[, c("x", "y")] # another data.frame
+knresults <- DCluster::opgam(data = nc.sids, thegrid = the_grid, alpha = 0.05,
+                   iscluster = DCluster::kn.iscluster, 
+                   fractpop = 0.15, # fraction of total population to use
+                   R = 99, # Number of repetitions for bootstrapping
+                   model = "negbin", mle = mle)
+knresults
+```
+
+```
+##                  x       y  statistic cluster pvalue size
+## Currituck   406.01 4035.10  11269.293       1   0.04   25
+## Northampton 281.10 4029.75 182768.987       1   0.02    7
+## Hertford    323.77 4028.10  39205.468       1   0.01    7
+## Camden      392.64 4021.10   9653.832       1   0.03   26
+## Gates       340.22 4029.13  10512.742       1   0.03   22
+## Halifax     266.13 4022.30  67148.419       1   0.02   20
+## Pasquotank  389.33 4019.59   9653.832       1   0.01   26
+## Perquimans  366.08 4005.86   9653.832       1   0.02   26
+## Chowan      351.02 3991.89  28388.070       1   0.02   27
+## Edgecombe   268.32 3975.38 687490.572       1   0.02   16
+## Martin      312.68 3968.99 186997.037       1   0.02   16
+## Washington  340.68 3968.14  10556.975       1   0.03   27
+## Dare        439.65 3975.36   8241.024       1   0.01   25
+## Columbus    161.28 3802.49 124587.391       1   0.04    3
+```
+
+### Plot clusters
+
+
+```r
+#Plot centroids
+plot(nc.sids$x, nc.sids$y, xlab="Easting", ylab="Northing")
+#Plot points marked as clusters
+points(knresults$x, knresults$y, col="red", pch="*")
+```
+
+![](spatial_stats_files/figure-html/plot-1.png)<!-- -->
