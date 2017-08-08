@@ -133,6 +133,7 @@ summary(ny_car)
 
 ```{r new-data}
 rm(list = ls())
+library(spdep)
 data("nc.sids")
 ls()
 class(nc.sids)
@@ -190,7 +191,10 @@ tango.test(Observed ~ offset(log(Expected)),
 ```
 
 ## Locating clusters
-Using Kulldorf's statistic
+Using Kulldorf's statistic. 
+Uses a spatial scan method also available in SATscan.
+The method tests the null hypothesis that the relative risks in the areas that for neighbours of the area under examination are the same as the relative risk in the region under examination. 
+The alternative hypothesis is that the relative risk in region of interest is higher that of the surrounding area. 
 `calculate.mle()` requires `Expected` and `Observed` and data as a data.frame
 
 ```{r}
