@@ -4,14 +4,14 @@ exclude: true
 
 # dplyr and tidyr
 
-dplyr is the replacement for plyr. 
-I used plyr a lot for my work, but the replacement should change things considerably, including by making it easier to create wrapper functions for split-apply-combine operations. 
-One of the particularly nice things is that for repetitive operations, it should be relatively easy to create wrapper functions to achieve this. 
-
-One really nice feature is the ability to connect a series of commands in the same way as pipes in Unix systems. 
+dplyr introduces a consistent grammar of data manipulation for R. 
+The significance of this should not be underestimated. 
+It makes the standard data manipulation that all data analysts need to do so much easier. 
+A particularly nice feature is the ability to connect a series of commands in the same way as pipes in Unix systems. 
 Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
+Together with ggplot2, lubridate, stringr and others they form the 'tidyverse'.
 
 * TOC
 {:toc}
