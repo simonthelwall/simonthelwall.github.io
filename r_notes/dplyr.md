@@ -2,6 +2,9 @@
 exclude: true
 ---
 
+* TOC
+{:toc}
+
 # dplyr and tidyr
 
 dplyr introduces a consistent grammar of data manipulation for R. 
