@@ -1,5 +1,5 @@
 ---
-  output:
+output:
   html_document:
     keep_md: true
     toc: true
@@ -279,10 +279,30 @@ test <- test %>%
   mutate(rolling_4 = rowSums(.[3:6], na.rm = TRUE))
 test
 ```
-                                                                                        ## Wrapping dplyr in a function
+                                                                                 ## Wrapping dplyr in a function
 
 Programming with dplyr has changed a lot with the release of dplyr 0.7. 
-So, much of what follows is likely to be inaccurate for version 0.7 and later. 
+Previously there was a convoluted process using lazy eval and teh `interp` function. 
+Now, dplyr incorporates tidyeval and is much simpler. 
+The vignette on [programming with dplyr](https://github.com/simonthelwall/simonthelwall.github.io.git) provides a much longer explanation of how it works.
+
+### A simple tidyeval example
+Say I want a function to sort a dataframe by a named column. 
+I know that dplyr will already do this, but this is simply to illustrate how evaluation works when writing functions with dplyr. 
+
+```{r}
+data(mtcars)
+select_a_column <- function(dat, column){
+  col_to_use <- enquo(column)
+  dat <- select(dat, !!col_to_use)
+  return(dat)
+}
+select_a_column(mtcars, mpg) %>% head()
+```
+
+Two steps here: `enquo()` to capture the variable of interest and `!!` to use it. 
+### The old method
+What follows is likely to be inaccurate for version 0.7 and later. 
 
 Can be a little tricky and some of the information on the internet seems out of date. However, managed to wrap the following in a function to produce nice univariable tables. It does require a variable called obs though. This should be fixable with a little wrangling. 
                                                                                                
@@ -314,27 +334,32 @@ mtcars <- mtcars
 mtcars %>% group_by(cyl) %>% summarise(n = n(), am = sum(am)) %>%
   mutate(pc.am = round((am/n)*100, 2))
 ```
-                                                                                         Then, to get this in a function, one needs to supply more than one variable to the data. 
-                                                                                         This turns out to be rather tricky. 
-                                                                                         One has to interpret the multiple variables supplied, otherwise you get all sorts of errors. 
+
+Then, to get this in a function, one needs to supply more than one variable to the data. 
+
+This turns out to be rather tricky. 
+
+One has to interpret the multiple variables supplied, otherwise you get all sorts of errors. 
 ```{r}
-                                                                                   require(lazyeval) # I thought dplyr loaded this by default, but apparently not. 
-tabFun <- function(x, y, z) {
-  a <- x %>% group_by_(as.name(y)) %>%
-  summarise_(n = interp( ~
-  length(var), var = as.name(z)),
-  sum.z = interp( ~
-  sum(var), var = as.name(z))) %>%
-  mutate(pc.am = round((sum.z /
-  n) * 100, 2))
+
+# require(lazyeval) # I thought dplyr loaded this by default, but apparently not.
+tabFun <- function(dat, y, z) {
+  grouping_var <- enquo(y)
+  summing_var <- enquo(z)
+  a <- dat %>% group_by(!!grouping_var) %>%
+    summarise(n = length(!!summing_var), 
+              sum_z = sum(!!summing_var)) %>%
+    mutate(pc = round((sum_z / n) * 100, 1)
+           )
   return(a)
 }
-tabFun(mtcars, "cyl", "am")
+tabFun(mtcars, cyl, am)
 ```
 Phew. 
 
 Oh, and incidentally, trying to simplify this with n = n() returns the error `Error in n() : This function should not be called directly`. 
-                                                                                         I don't know why. 
+
+I don't know why. 
 
 ## Mutate in a function
 ok me a long time to find a solution for this. 
@@ -345,71 +370,43 @@ I don't really see the need for `[]` indexing, but the following allows you to a
 
 ```{r, eval=FALSE}
 
-age_fun <- function(data, dob, sampledate) {
-  var1 <- deparse(substitute(dob))
-  var2 <- deparse(substitute(sampledate))
-  data <-
-  mutate(data, age = data[, var2] - data[, var1],
-  age = as.numeric(age) / 365.25)
-  
-}
-ec <- age_fun(ec, date_of_birth, sample_date)
-                                                                                         #      from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-within-function
- ```
-                                                                                               
-## Wrapping filter in a function
-                                                                                     
-```r
-require(dplyr)
-data(mtcars)
-mtcars$name <-
-row.names(mtcars)
+temp_dat <- data.frame(dob = as.Date("01/01/2017", format = "%d/%m/%Y"), 
+                       sampledate = as.Date("15/06/2017", format = "%d/%m/%Y"))
 
-just_1 <- mtcars %>% filter(name == "Mazda RX4")
-just_1
-require(lazyeval)
-trend_fun <- function(data, org) {
-  filter_criteria <- interp( ~ colmn == org, colmn = as.name("name"))
-  z <- data %>% filter_(filter_criteria)
+
+age_fun <- function(dat, dob_var, sampledate_var) {
+  var1 <- enquo(dob_var)
+  var2 <- enquo(sampledate_var)
+  out <- dat %>% 
+    mutate(
+      age = as.numeric( (!!var2) - (!!var1) ) / 365.25
+    )
+  return(out)
 }
 
-trend_fun(mtcars, "Mazda RX4")
-just_2 <- trend_fun(mtcars, "Mazda RX4")
-just_2
+age_fun2 <- function(dat, dob_var, sampledate_var) {
+  # var1 <- enquo(dob_var)
+  # var2 <- enquo(sampledate_var)
+  out <- dat %>% 
+    mutate(
+      age = as.numeric( dob_var - sampledate_var ) / 365.25
+    )
+  return(out)
+}
+
+temp_dat <- age_fun(dat = temp_dat, dob_var = dob, sampledate_var = sampledate)
+temp_dat <- age_fun2(dat = temp_dat, dob_var = dob, sampledate_var = sampledate)
+temp_dat
+# Old version referenced from here. 
+# from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-within-function
 ```
-Adapted from: http://stackoverflow.com/questions/26492280/non-standard-evaluation-nse-in-dplyrs-filter-pulling-data-from-mysql
-                                                                                         
-                                                                                   ## Using `select()` in a function
-```{r}
-require(dplyr)
-require(lazyeval)
-data(mtcars)
-head(mtcars)
 
-select_a_column <- function(data, column) {
-  z <- data %>% select_("mpg", column)
-  return(z)
-}
 
-select_a_column(mtcars, "hp")
-```
-                                                                                   
-## Arrange in a function
-                                                                                   
-```{r}
-arrange_a_column <- function(data, column) {
-  z <-
-  data %>% arrange_(lazyeval::interp( ~ var, var = as.name(column)))
-}
-arrange_a_column(mtcars, "disp") %>% head()
-
-```
-                                                                                   
 ## Hypothesis tests and dplyr
-                                                                                   
-                                                                                   Technically possible, see broom and dplyr. 
+
+Technically possible, see broom and dplyr. 
 I haven't (yet) managed this for a `chisq.test()` , but: 
-                                                                                   
+
 ```{r}
 test <- as.data.frame(structure(
   list(organism.species.name = c("ec", "ec", "kp"),
@@ -426,9 +423,9 @@ test %>% group_by(organism.species.name, abx) %>%
   mutate(p.val = chisq.test(matrix(
   c(n_sus_start, n_res_start, n_sus_end, n_res_end), nrow = 2))$p.value)
 ```
-                                                                                     
+    
 ## tidyr
-                                                                                     
+
 ### wide to long
 ```{r}
 stocks <-
@@ -442,12 +439,12 @@ stocks <-
   gather(stocks, stock, price, -time)
 
 ```
-                                                                                     
+
 ### long to wide
 
 `spread()` takes long data and makes it wide. 
 One specifies the `key` which contains the cells that will become column headers and then `value` column which contains the data that will go in the cells beneath the new columns.
-                                                                                           
+
 ```{r}
 data(infert)
 long <- infert %>%
@@ -482,15 +479,19 @@ dat %>%
 ```
 
 ## Joining
+
 Very similar to plyr, but the function name specifies the type of join rather than specifying within the function. 
-```r
-                                                                                   data3 <- left_join(data1, data2, by = "common.var")
-                                                                                   ```
-                                                                                   See SQL Venn for reminders. 
-                                                                                   
-                                                                                   Usefully, one can join by more than one variable. 
-                                                                                   This is useful when a single variable does not provide a unique identifier. 
-                                                                                   
+
+```{r, eval = FALSE}
+                                                                                 data3 <- left_join(data1, data2, by = "common.var")
+
+```
+                                                                                 See SQL Venn for reminders. 
+
+Usefully, one can join by more than one variable. 
+This is useful when a single variable does not provide a unique identifier. 
+
+
 ```{r}
 x <- data.frame(
   var1 = c(1, 1, 2),
@@ -506,8 +507,9 @@ z <- left_join(x, y, by = c("var1", "var2"))
 z
   
 ```
-                                                                                   
+
 ### anti_join
+
 Anti join retains those records which are in the left table but not the right and retains the columns of the left table. 
 
 This is probably more useful than one might at first think. 
