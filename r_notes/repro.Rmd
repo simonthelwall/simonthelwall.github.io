@@ -1,0 +1,129 @@
+---
+output:
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+    exclude: true
+---
+
+# Research documents in R
+
+Rmarkdown is great; it mixes plain text, employs markdown formatting with R script to output documents to pdf (with LaTeX), Word or markdown documents. 
+Unfortunately, it doesn't quite do everything I need out of the box. 
+There are a few things that I need for full solution for preparing full research documents: 
+
+ * cross-referenced tables and figures
+ * an easy way to go from regression models to tables
+ * good tables
+ 
+## Cross referencing
+ 
+The captioner package creates nice captions which can be cross-referenced in text. 
+ First, one creates an object to hold the captions. 
+ The captions are then added to the object. 
+ Finally, captions are called at the same point as the table or figure. 
+ 
+ ```{r captioner, echo = TRUE}
+library(captioner)
+fig_nums <- captioner(prefix = "Figure")
+fig_nums(name = "plot1", "A caption describing the plot")
+```
+
+The caption can then be printed by calling the object. 
+
+`fig_nums("plot1")`
+
+**`r fig_nums("plot1")`**
+```{r}
+data(mtcars)
+library(ggplot2)
+p <- ggplot(data = mtcars, aes(x = wt, y = mpg)) + geom_point()
+p
+```
+
+It can also be used inline, e.g. 
+
+> As shown in `r knitr::inline_expr('fig_nums("plot1")')`
+
+## Going from regression models to table output
+
+Normal regression model outputs don't give particularly nice outputs that can easily be used in a report. 
+
+```{r}
+data(infert)
+head(infert)
+m1 <- glm(case ~ spontaneous + stratum + parity, data = infert, family = "binomial")
+m1
+```
+
+I used to have a really slow way of accessing the components of the model to go to a useful output. 
+Broom made things much easier:
+
+```{r}
+library(broom)
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```
+
+At this point one could export to csv, format a table in Excel and copy-paste to Word.
+However, that would fail to make full use of the potential of Rmarkdown. 
+There's a function in knitr called kable, and this can produce simple tables. 
+Unfortunately, they are too simple for my needs.
+I favour pixiedust, which does almost everything I need it to.
+
+```{r, pixiedust}
+library(pixiedust)
+library(dplyr)
+m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  dust() %>%
+  sprinkle(cols = c("term", "estimate", "conf.low", "conf.high"), 
+           round = 2) %>%
+  sprinkle(rows = -1, border = c("top", "bottom")) %>%
+  sprinkle(rows = 4, border = c("bottom")) %>%
+  sprinkle(cols = "p.value", fn = quote(pvalString(value))) %>% 
+  sprinkle_colnames(term = "Term", p.value = "P-value")
+```
+
+The [vignette](https://cran.r-project.org/web/packages/pixiedust/vignettes/pixiedust.html) has further details. 
+In addition, pixiedust has a nice method for inline estimates. 
+`r knitr::inline_expr('dust_inline(m1, term = "spontaneous", label = "OR", fun = exp)')`
+
+Which renders:
+Spontaneous abortions were associated with increasing odds of infertility `r dust_inline(m1, term = "spontaneous", label = "OR", fun = exp)`
+
+## Publication quality graphs
+
+Graphs out of ggplot2 are almost perfect, however there are a few places in which they fall short:
+
+ 1. Antialiasing - not available in ggplot2 so some lines can appear jagged
+ 1. Arranging multiple graphs in a single figure
+
+Cowplot provides a nice way of arranging figures in grids and also provides an attractive and professional looking theme. 
+
+```{r cowplot}
+library(cowplot)
+p <- ggplot(data = mtcars, aes(x = wt, y = mpg)) + geom_point()
+q <- ggplot(data = mtcars, aes(x = wt, y = hp)) + geom_point()
+z <- plot_grid(p,q, labels = c("A", "B"))
+z
+```
+
+Cairo adds the ability to export with antialiasing
+```{r notCairo}
+library(knitr)
+opts_chunk$set(dev="png", 
+               dev.args=list(type="windows"),
+               dpi=300)
+p <- ggplot(data = mtcars, aes(x = wt, y = mpg)) + geom_line()
+p
+```
+
+```{r Cairo}
+library(Cairo)
+opts_chunk$set(dev="png", 
+               dev.args=list(type="cairo"),
+               dpi=300)
+library(Cairo)
+p
+```
