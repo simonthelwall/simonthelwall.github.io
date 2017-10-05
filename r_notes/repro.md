@@ -2,7 +2,7 @@
 exclude: true
 --- 
 
-# Research documents in R
+# report production in R
 
 Rmarkdown is great; it mixes plain text, employs markdown formatting with R script to output documents to pdf (with LaTeX), Word or markdown documents. 
 Unfortunately, it doesn't quite do everything I need out of the box. 
@@ -152,7 +152,7 @@ m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
   dust( print_method = "markdown") %>%
   sprinkle(cols = c("term", "estimate", "conf.low", "conf.high"), 
            round = 2) %>%
-  sprinkle(rows = -1, border = c("top", "bottom")) %>%
+  sprinkle(rows = 1, border = c("top")) %>%
   sprinkle(rows = 4, border = c("bottom")) %>%
   sprinkle(cols = "p.value", fn = quote(pvalString(value))) %>% 
   sprinkle_colnames(term = "Term", p.value = "P-value") 
@@ -167,11 +167,11 @@ m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
 <th colspan = '1'; rowspan = '1'; style='text-align:right;'>P-value</th>
 </tr>
 <tr>
-<td colspan = '1'; rowspan = '1'; style='text-align:left;'>(Intercept)</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>0.53</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>0.22</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>1.26</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>0.15</td>
+<td colspan = '1'; rowspan = '1'; style='text-align:left;border-top:1px solid Black;'>(Intercept)</td>
+<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>0.53</td>
+<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>0.22</td>
+<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>1.26</td>
+<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>0.15</td>
 </tr>
 <tr>
 <td colspan = '1'; rowspan = '1'; style='text-align:left;'>spontaneous</td>
