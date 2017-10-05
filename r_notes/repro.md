@@ -1,3 +1,6 @@
+---
+exclude: true
+--- 
 
 # Research documents in R
 
@@ -146,13 +149,13 @@ library(dplyr)
 ```r
 m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
-  dust() %>%
+  dust( print_method = "markdown") %>%
   sprinkle(cols = c("term", "estimate", "conf.low", "conf.high"), 
            round = 2) %>%
   sprinkle(rows = -1, border = c("top", "bottom")) %>%
   sprinkle(rows = 4, border = c("bottom")) %>%
   sprinkle(cols = "p.value", fn = quote(pvalString(value))) %>% 
-  sprinkle_colnames(term = "Term", p.value = "P-value")
+  sprinkle_colnames(term = "Term", p.value = "P-value") 
 ```
 
 <!--html_preserve--><table align = 'center' style = 'border-collapse:collapse;'>

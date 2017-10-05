@@ -7,7 +7,7 @@ output:
     exclude: true
 ---
 
-# Research documents in R
+# report production in R
 
 Rmarkdown is great; it mixes plain text, employs markdown formatting with R script to output documents to pdf (with LaTeX), Word or markdown documents. 
 Unfortunately, it doesn't quite do everything I need out of the box. 
@@ -76,13 +76,15 @@ library(pixiedust)
 library(dplyr)
 m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
-  dust() %>%
+  dust( print_method = "markdown") %>%
   sprinkle(cols = c("term", "estimate", "conf.low", "conf.high"), 
            round = 2) %>%
-  sprinkle(rows = -1, border = c("top", "bottom")) %>%
+  sprinkle(rows = 1, border = c("top")) %>%
   sprinkle(rows = 4, border = c("bottom")) %>%
   sprinkle(cols = "p.value", fn = quote(pvalString(value))) %>% 
-  sprinkle_colnames(term = "Term", p.value = "P-value")
+  sprinkle_colnames(term = "Term", p.value = "P-value") 
+  
+
 ```
 
 The [vignette](https://cran.r-project.org/web/packages/pixiedust/vignettes/pixiedust.html) has further details. 
