@@ -76,13 +76,14 @@ library(pixiedust)
 library(dplyr)
 m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
-  dust( print_method = "markdown") %>%
+  dust() %>%
   sprinkle(cols = c("term", "estimate", "conf.low", "conf.high"), 
            round = 2) %>%
   sprinkle(rows = 1, border = c("top")) %>%
   sprinkle(rows = 4, border = c("bottom")) %>%
   sprinkle(cols = "p.value", fn = quote(pvalString(value))) %>% 
-  sprinkle_colnames(term = "Term", p.value = "P-value") 
+  sprinkle_colnames(term = "Term", p.value = "P-value") %>%
+  sprinkle_print_method("markdown")
   
 
 ```
