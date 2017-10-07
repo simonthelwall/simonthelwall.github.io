@@ -1,0 +1,48 @@
+---
+output:
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dates
+
+```{r}
+x <- "02/10/2017"
+x
+x <- as.Date(x, format = "%d/%m/%Y")
+x
+```
+
+Date components:
+Day
+
+ * `%a` Abbreviated day of week
+ * `%A` Full day of week
+ * `%d` Numeric day of the month (01-31)
+ * `%e` Numeric day of month with leading space for single digits
+ * `%u` Numeric day of week, Monday = 1
+ 
+Month 
+
+ * `%b` Abbreviated month
+ * `%B` Full month name
+ * `%m` Numeric month (01-12)
+
+Year
+
+ * `%y` Year without century
+ * `%Y` Year with century
+ 
+So one can format a date:
+
+```{r}
+format(x, "%a")
+
+format(x, "%A, %d %B %Y")
+```
