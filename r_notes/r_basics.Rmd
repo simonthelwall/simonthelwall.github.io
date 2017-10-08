@@ -46,3 +46,53 @@ format(x, "%a")
 
 format(x, "%A, %d %B %Y")
 ```
+
+## Logical operators
+
+```{r logic-operators}
+x <- 5
+x == 5
+x < 1
+x > 2
+x < 5
+x <= 5
+x %in% c(1, 2, 3, 4, 5)
+```
+
+## Data types
+
+### Data frames
+
+These are the bread-and-butter data types where you'll do most of your work. 
+They are rectangular data where each row forms an observation and each column is a variable. 
+Technically, a dataframe is a `list` of equal-length `vectors`. 
+
+### Making a dataframe
+
+```{r making-a-dataframe}
+x <- data.frame(id = c(1,2,3,4,5),
+                x_var = c(4,2,9,4,7), 
+                height = c("Tall", "Short", "Medium", "Tall", "Short"), 
+                stringsAsFactors = FALSE)
+x
+```
+
+### Accessing elements of a dataframe
+
+Square-bracket indexing is used to access elements of a dataframe
+
+
+```{r square-brckts}
+# First row
+x[1, ]
+
+# First column
+x[ , 1]
+
+# Second row, third col
+x[2, 3]
+
+# all cols for 'short' observations
+x[x$height == "Short", ]
+```
+## Missing values
