@@ -1,3 +1,7 @@
+---
+exclude: true
+---
+
 # statistics 2
 
 

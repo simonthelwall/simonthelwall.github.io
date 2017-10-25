@@ -149,52 +149,30 @@ library(dplyr)
 ```r
 m1 %>% tidy(exponentiate = TRUE, conf.int = TRUE) %>%
   select(term, estimate, conf.low, conf.high, p.value) %>%
-  dust( print_method = "markdown") %>%
+  dust() %>%
   sprinkle(cols = c("term", "estimate", "conf.low", "conf.high"), 
            round = 2) %>%
   sprinkle(rows = 1, border = c("top")) %>%
   sprinkle(rows = 4, border = c("bottom")) %>%
   sprinkle(cols = "p.value", fn = quote(pvalString(value))) %>% 
-  sprinkle_colnames(term = "Term", p.value = "P-value") 
+  sprinkle_colnames(term = "Term", p.value = "P-value") %>%
+  sprinkle_print_method("markdown")
 ```
 
-<!--html_preserve--><table align = 'center' style = 'border-collapse:collapse;'>
-<tr>
-<th colspan = '1'; rowspan = '1'; style='text-align:left;'>Term</th>
-<th colspan = '1'; rowspan = '1'; style='text-align:right;'>estimate</th>
-<th colspan = '1'; rowspan = '1'; style='text-align:right;'>conf.low</th>
-<th colspan = '1'; rowspan = '1'; style='text-align:right;'>conf.high</th>
-<th colspan = '1'; rowspan = '1'; style='text-align:right;'>P-value</th>
-</tr>
-<tr>
-<td colspan = '1'; rowspan = '1'; style='text-align:left;border-top:1px solid Black;'>(Intercept)</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>0.53</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>0.22</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>1.26</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-top:1px solid Black;'>0.15</td>
-</tr>
-<tr>
-<td colspan = '1'; rowspan = '1'; style='text-align:left;'>spontaneous</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>3.51</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>2.3</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>5.5</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>< 0.001</td>
-</tr>
-<tr>
-<td colspan = '1'; rowspan = '1'; style='text-align:left;'>stratum</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>0.99</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>0.98</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>1.01</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;'>0.31</td>
-</tr>
-<tr>
-<td colspan = '1'; rowspan = '1'; style='text-align:left;border-bottom:1px solid Black;'>parity</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-bottom:1px solid Black;'>0.75</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-bottom:1px solid Black;'>0.57</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-bottom:1px solid Black;'>0.97</td>
-<td colspan = '1'; rowspan = '1'; style='text-align:right;border-bottom:1px solid Black;'>0.037</td>
-</tr>
-</table></br></br><!--/html_preserve-->
+
+
+|Term        | estimate| conf.low| conf.high| P-value|
+|:-----------|--------:|--------:|---------:|-------:|
+|(Intercept) |     0.53|     0.22|      1.26|    0.15|
+|spontaneous |     3.51|      2.3|       5.5| < 0.001|
+|stratum     |     0.99|     0.98|      1.01|    0.31|
+|parity      |     0.75|     0.57|      0.97|   0.037|
+
+
+<br>
+
+
+<br>
 
 The [vignette](https://cran.r-project.org/web/packages/pixiedust/vignettes/pixiedust.html) has further details. 
 In addition, pixiedust has a nice method for inline estimates. 
