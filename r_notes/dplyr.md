@@ -1,9 +1,6 @@
 ---
-exclude: yes
+exclude: true
 --- 
-
-* TOC
-{:toc}
 
 # dplyr and tidyr
   
@@ -15,6 +12,9 @@ Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 Together with ggplot2, lubridate, stringr and others they form the 'tidyverse'.
+
+* TOC
+{:toc}
 
 ## The basics
 
@@ -33,6 +33,10 @@ The `paste(something, collapse = "|")` is the important bit here.
 
 ```r
 library(dplyr)
+```
+
+```
+## Warning: package 'dplyr' was built under R version 3.4.2
 ```
 
 ```
@@ -364,10 +368,10 @@ test %>%
 ## # A tibble: 4 x 2
 ##     name `mean(value)`
 ##    <chr>         <dbl>
-## 1  apple   -0.09557118
-## 2   bear    0.09134169
-## 3 orange   -0.01546917
-## 4   pear   -0.27539133
+## 1  apple    -1.0072118
+## 2   bear    -0.8032733
+## 3 orange    -1.1460230
+## 4   pear     1.1228281
 ```
 
 ```r
@@ -381,10 +385,10 @@ test %>% group_by(reallyreallyreallyreallyreallylongvarname) %>%
 ## # A tibble: 4 x 2
 ##   reallyreallyreallyreallyreallylongvarname `mean(value)`
 ##                                       <chr>         <dbl>
-## 1                                     apple   -0.09557118
-## 2                                      bear    0.09134169
-## 3                                    orange   -0.01546917
-## 4                                      pear   -0.27539133
+## 1                                     apple    -1.0072118
+## 2                                      bear    -0.8032733
+## 3                                    orange    -1.1460230
+## 4                                      pear     1.1228281
 ```
 
 This can be resolved using `quote()`.
@@ -697,201 +701,6 @@ temp_dat
 # from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-within-function
 ```
 
-
-## Hypothesis tests and dplyr
-
-Technically possible, see broom and dplyr. 
-I haven't (yet) managed this for a `chisq.test()` , but: 
-
-
-```r
-test <- as.data.frame(structure(
-  list(organism.species.name = c("ec", "ec", "kp"),
-       abx = c("ceph", "carb", "ceph"),
-       n_sus_start = c(5L, 5L, 10L),
-       n_res_start = c(10L, 5L, 5L),
-       n_sus_end = c(10L, 5L, 5L),
-       n_res_end = c(5L, 5L, 10L)),
-  .Names = c("organism.species.name", "abx", "n_sus_start", "n_res_start",
-  "n_sus_end", "n_res_end"), class = "data.frame", row.names = c(NA,-3L)
-  ))
-  
-test %>% group_by(organism.species.name, abx) %>%
-  mutate(p.val = chisq.test(matrix(
-  c(n_sus_start, n_res_start, n_sus_end, n_res_end), nrow = 2))$p.value)
-```
-
-```
-## # A tibble: 3 x 7
-## # Groups:   organism.species.name, abx [3]
-##   organism.species.name   abx n_sus_start n_res_start n_sus_end n_res_end
-##                   <chr> <chr>       <int>       <int>     <int>     <int>
-## 1                    ec  ceph           5          10        10         5
-## 2                    ec  carb           5           5         5         5
-## 3                    kp  ceph          10           5         5        10
-## # ... with 1 more variables: p.val <dbl>
-```
-    
-## tidyr
-
-### wide to long
-
-```r
-stocks <-
-  data.frame(
-  time = as.Date('2009-01-01') + 0:9,
-  X = rnorm(10, 0, 1),
-  Y = rnorm(10, 0, 2),
-  Z = rnorm(10, 0, 4)
-  )
-  stocks
-```
-
-```
-##          time          X          Y          Z
-## 1  2009-01-01  1.2016221 -0.4846635 -2.7125514
-## 2  2009-01-02 -1.6422376  0.1221024  1.3957550
-## 3  2009-01-03 -0.4100961  4.3015740 -3.9971027
-## 4  2009-01-04 -1.2405362 -6.7838361  2.1277799
-## 5  2009-01-05  1.3222849 -5.8374972  4.7703500
-## 6  2009-01-06 -0.2086279 -2.2065073 -4.7859668
-## 7  2009-01-07 -1.3589766 -1.6496938  4.3019125
-## 8  2009-01-08 -1.1278038  3.5212773  0.1776938
-## 9  2009-01-09 -0.6093792 -4.9282844 -3.0586621
-## 10 2009-01-10  0.4340521 -3.6626172  3.4838914
-```
-
-```r
-  gather(stocks, stock, price, -time)
-```
-
-```
-##          time stock      price
-## 1  2009-01-01     X  1.2016221
-## 2  2009-01-02     X -1.6422376
-## 3  2009-01-03     X -0.4100961
-## 4  2009-01-04     X -1.2405362
-## 5  2009-01-05     X  1.3222849
-## 6  2009-01-06     X -0.2086279
-## 7  2009-01-07     X -1.3589766
-## 8  2009-01-08     X -1.1278038
-## 9  2009-01-09     X -0.6093792
-## 10 2009-01-10     X  0.4340521
-## 11 2009-01-01     Y -0.4846635
-## 12 2009-01-02     Y  0.1221024
-## 13 2009-01-03     Y  4.3015740
-## 14 2009-01-04     Y -6.7838361
-## 15 2009-01-05     Y -5.8374972
-## 16 2009-01-06     Y -2.2065073
-## 17 2009-01-07     Y -1.6496938
-## 18 2009-01-08     Y  3.5212773
-## 19 2009-01-09     Y -4.9282844
-## 20 2009-01-10     Y -3.6626172
-## 21 2009-01-01     Z -2.7125514
-## 22 2009-01-02     Z  1.3957550
-## 23 2009-01-03     Z -3.9971027
-## 24 2009-01-04     Z  2.1277799
-## 25 2009-01-05     Z  4.7703500
-## 26 2009-01-06     Z -4.7859668
-## 27 2009-01-07     Z  4.3019125
-## 28 2009-01-08     Z  0.1776938
-## 29 2009-01-09     Z -3.0586621
-## 30 2009-01-10     Z  3.4838914
-```
-
-### long to wide
-
-`spread()` takes long data and makes it wide. 
-One specifies the `key` which contains the cells that will become column headers and then `value` column which contains the data that will go in the cells beneath the new columns.
-
-
-```r
-data(infert)
-long <- infert %>%
-  mutate(id = seq_along(education)) %>% # create integer id
-  gather(key = variable, value = val,-id)
-```
-
-```
-## Warning: attributes are not identical across measure variables;
-## they will be dropped
-```
-
-```r
-head(long)
-```
-
-```
-##   id  variable     val
-## 1  1 education  0-5yrs
-## 2  2 education  0-5yrs
-## 3  3 education  0-5yrs
-## 4  4 education  0-5yrs
-## 5  5 education 6-11yrs
-## 6  6 education 6-11yrs
-```
-
-```r
-long %>% spread(key = variable, value = val) %>%
-  head()
-```
-
-```
-##   id age case education induced parity pooled.stratum spontaneous stratum
-## 1  1  26    1    0-5yrs       1      6              3           2       1
-## 2  2  42    1    0-5yrs       1      1              1           0       2
-## 3  3  39    1    0-5yrs       2      6              4           0       3
-## 4  4  34    1    0-5yrs       2      4              2           0       4
-## 5  5  35    1   6-11yrs       1      3             32           1       5
-## 6  6  36    1   6-11yrs       2      4             36           1       6
-```
-                                                                                       
-For a more complex approach see [this SO post](http://stackoverflow.com/questions/30592094/r-spreading-multiple-columns-with-tidyr#30592293).
-
-See also `unite()` in tidyr
-
-If `spread()` tells you `"Error: All columns must be named"`, then you have `NA` values in your key column. 
-
-
-```r
-dat <- data_frame(Person = rep(c("greg", "sally", "sue"), each = 2),
-                  Time = rep(c("Pre", "Post"), 3),
-                  Score1 = round(rnorm(6, mean = 80, sd = 4), 0),
-                  Score2 = round(jitter(Score1, 15), 0),
-                  Score3 = 5 + (Score1 + Score2) / 2)
-  
-head(dat)
-```
-
-```
-## # A tibble: 6 x 5
-##   Person  Time Score1 Score2 Score3
-##    <chr> <chr>  <dbl>  <dbl>  <dbl>
-## 1   greg   Pre     78     80   84.0
-## 2   greg  Post     79     77   83.0
-## 3  sally   Pre     75     75   80.0
-## 4  sally  Post     79     80   84.5
-## 5    sue   Pre     76     75   80.5
-## 6    sue  Post     75     76   80.5
-```
-
-```r
-dat %>%
-  gather(temp, score, starts_with("Score")) %>%
-  unite(temp1, Time, temp, sep = ".") %>%
-  spread(temp1, score)
-```
-
-```
-## # A tibble: 3 x 7
-##   Person Post.Score1 Post.Score2 Post.Score3 Pre.Score1 Pre.Score2
-## *  <chr>       <dbl>       <dbl>       <dbl>      <dbl>      <dbl>
-## 1   greg          79          77        83.0         78         80
-## 2  sally          79          80        84.5         75         75
-## 3    sue          75          76        80.5         76         75
-## # ... with 1 more variables: Pre.Score3 <dbl>
-```
-
 ## Joining
 
 Very similar to plyr, but the function name specifies the type of join rather than specifying within the function. 
@@ -1001,3 +810,294 @@ anti3
 ## 1  2 flu   i
 ## 2  4 pen   s
 ```
+
+## Hypothesis tests and dplyr
+
+Technically possible, see broom and dplyr. 
+I haven't (yet) managed this for a `chisq.test()` , but: 
+
+
+```r
+test <- as.data.frame(structure(
+  list(organism.species.name = c("ec", "ec", "kp"),
+       abx = c("ceph", "carb", "ceph"),
+       n_sus_start = c(5L, 5L, 10L),
+       n_res_start = c(10L, 5L, 5L),
+       n_sus_end = c(10L, 5L, 5L),
+       n_res_end = c(5L, 5L, 10L)),
+  .Names = c("organism.species.name", "abx", "n_sus_start", "n_res_start",
+  "n_sus_end", "n_res_end"), class = "data.frame", row.names = c(NA,-3L)
+  ))
+  
+test %>% group_by(organism.species.name, abx) %>%
+  mutate(p.val = chisq.test(matrix(
+  c(n_sus_start, n_res_start, n_sus_end, n_res_end), nrow = 2))$p.value)
+```
+
+```
+## # A tibble: 3 x 7
+## # Groups:   organism.species.name, abx [3]
+##   organism.species.name   abx n_sus_start n_res_start n_sus_end n_res_end
+##                   <chr> <chr>       <int>       <int>     <int>     <int>
+## 1                    ec  ceph           5          10        10         5
+## 2                    ec  carb           5           5         5         5
+## 3                    kp  ceph          10           5         5        10
+## # ... with 1 more variables: p.val <dbl>
+```
+    
+## tidyr
+
+### wide to long
+
+```r
+stocks <-
+  data.frame(
+  time = as.Date('2009-01-01') + 0:9,
+  X = rnorm(10, 0, 1),
+  Y = rnorm(10, 0, 2),
+  Z = rnorm(10, 0, 4)
+  )
+  stocks
+```
+
+```
+##          time           X          Y         Z
+## 1  2009-01-01 -0.88479340  3.1701227 -2.136975
+## 2  2009-01-02  0.01798935 -1.4598324  5.018601
+## 3  2009-01-03 -0.56116065 -0.9108743 -1.224266
+## 4  2009-01-04  0.71187702  3.2460590  4.165770
+## 5  2009-01-05 -0.54501132  0.6564193  7.053157
+## 6  2009-01-06 -2.21426401  0.9909274 -5.817582
+## 7  2009-01-07  0.83047458 -4.2730789  6.364397
+## 8  2009-01-08  0.16069678 -0.1590539  1.517472
+## 9  2009-01-09 -0.41591614 -0.5326436  5.376509
+## 10 2009-01-10 -1.05210651  1.7487084  1.728531
+```
+
+```r
+  gather(stocks, stock, price, -time)
+```
+
+```
+##          time stock       price
+## 1  2009-01-01     X -0.88479340
+## 2  2009-01-02     X  0.01798935
+## 3  2009-01-03     X -0.56116065
+## 4  2009-01-04     X  0.71187702
+## 5  2009-01-05     X -0.54501132
+## 6  2009-01-06     X -2.21426401
+## 7  2009-01-07     X  0.83047458
+## 8  2009-01-08     X  0.16069678
+## 9  2009-01-09     X -0.41591614
+## 10 2009-01-10     X -1.05210651
+## 11 2009-01-01     Y  3.17012272
+## 12 2009-01-02     Y -1.45983237
+## 13 2009-01-03     Y -0.91087430
+## 14 2009-01-04     Y  3.24605898
+## 15 2009-01-05     Y  0.65641925
+## 16 2009-01-06     Y  0.99092740
+## 17 2009-01-07     Y -4.27307889
+## 18 2009-01-08     Y -0.15905387
+## 19 2009-01-09     Y -0.53264363
+## 20 2009-01-10     Y  1.74870842
+## 21 2009-01-01     Z -2.13697451
+## 22 2009-01-02     Z  5.01860135
+## 23 2009-01-03     Z -1.22426551
+## 24 2009-01-04     Z  4.16577027
+## 25 2009-01-05     Z  7.05315710
+## 26 2009-01-06     Z -5.81758186
+## 27 2009-01-07     Z  6.36439748
+## 28 2009-01-08     Z  1.51747169
+## 29 2009-01-09     Z  5.37650878
+## 30 2009-01-10     Z  1.72853093
+```
+
+### long to wide
+
+`spread()` takes long data and makes it wide. 
+One specifies the `key` which contains the cells that will become column headers and then `value` column which contains the data that will go in the cells beneath the new columns.
+
+
+```r
+data(infert)
+long <- infert %>%
+  mutate(id = seq_along(education)) %>% # create integer id
+  gather(key = variable, value = val,-id)
+```
+
+```
+## Warning: attributes are not identical across measure variables;
+## they will be dropped
+```
+
+```r
+head(long)
+```
+
+```
+##   id  variable     val
+## 1  1 education  0-5yrs
+## 2  2 education  0-5yrs
+## 3  3 education  0-5yrs
+## 4  4 education  0-5yrs
+## 5  5 education 6-11yrs
+## 6  6 education 6-11yrs
+```
+
+```r
+long %>% spread(key = variable, value = val) %>%
+  head()
+```
+
+```
+##   id age case education induced parity pooled.stratum spontaneous stratum
+## 1  1  26    1    0-5yrs       1      6              3           2       1
+## 2  2  42    1    0-5yrs       1      1              1           0       2
+## 3  3  39    1    0-5yrs       2      6              4           0       3
+## 4  4  34    1    0-5yrs       2      4              2           0       4
+## 5  5  35    1   6-11yrs       1      3             32           1       5
+## 6  6  36    1   6-11yrs       2      4             36           1       6
+```
+                                                                                       
+For a more complex approach see [this SO post](http://stackoverflow.com/questions/30592094/r-spreading-multiple-columns-with-tidyr#30592293).
+
+See also `unite()` in tidyr
+
+If `spread()` tells you `"Error: All columns must be named"`, then you have `NA` values in your key column. 
+
+
+```r
+dat <- data_frame(Person = rep(c("greg", "sally", "sue"), each = 2),
+                  Time = rep(c("Pre", "Post"), 3),
+                  Score1 = round(rnorm(6, mean = 80, sd = 4), 0),
+                  Score2 = round(jitter(Score1, 15), 0),
+                  Score3 = 5 + (Score1 + Score2) / 2)
+  
+head(dat)
+```
+
+```
+## # A tibble: 6 x 5
+##   Person  Time Score1 Score2 Score3
+##    <chr> <chr>  <dbl>  <dbl>  <dbl>
+## 1   greg   Pre     93     93   98.0
+## 2   greg  Post     79     76   82.5
+## 3  sally   Pre     84     83   88.5
+## 4  sally  Post     76     71   78.5
+## 5    sue   Pre     82     83   87.5
+## 6    sue  Post     71     65   73.0
+```
+
+```r
+dat %>%
+  gather(temp, score, starts_with("Score")) %>%
+  unite(temp1, Time, temp, sep = ".") %>%
+  spread(temp1, score)
+```
+
+```
+## # A tibble: 3 x 7
+##   Person Post.Score1 Post.Score2 Post.Score3 Pre.Score1 Pre.Score2
+## *  <chr>       <dbl>       <dbl>       <dbl>      <dbl>      <dbl>
+## 1   greg          79          76        82.5         93         93
+## 2  sally          76          71        78.5         84         83
+## 3    sue          71          65        73.0         82         83
+## # ... with 1 more variables: Pre.Score3 <dbl>
+```
+
+### Expanding data to cover all permutations
+
+There are a number of options for this. 
+A combination of spreading to wide, then gathering to long is one approach. 
+However, tidyr also provides `complete` and `expand`. 
+I quite often need to produce summary counts by an organisation and if one organisation hasn't reported any cases for a period then there will be a single `NA` row for that organisation, rather than multiple rows of zero. 
+
+By the description in the manual, `complete` is 
+
+> "a wrapper around expand(), dplyr::left_join() and replace_na() that’s useful for completing missing combinations of data"
+
+Given the data below, I want to have all the rows for St James Infirmary that I also have for St Elsewhere. 
+
+
+```r
+dat <- structure(list(org_code = c("1A", "1A", "1A", "1A", "1A", "1A", 
+                                   "1A", "1A", "1A", "1A", "1A", "1A", "2F"), 
+                      status = c("FT", "FT", "FT", "FT", "FT", "FT", "FT", 
+                                 "FT", "FT", "FT", "FT", "FT", "--"), 
+                      org_name = c("St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St James Infirmary"), 
+                      year = c(2016L, 2016L, 2016L, 2016L, 2016L, 2016L, 2017L, 
+                               2017L, 2017L, 2017L, 2017L, 2017L, NA), 
+                      month = c(11L, 11L, 11L, 12L, 12L, 12L, 1L, 1L, 1L, 2L, 
+                                2L, 2L, NA), 
+                      measure = c("measure_a", "measure_b", "measure_c", 
+                                  "measure_a", "measure_b", "measure_c", 
+                                  "measure_a", "measure_b", "measure_c", 
+                                  "measure_a", "measure_b", "measure_c", NA), 
+                      count = c(1L, 5L, 7L, 5L, 9L, 3L, 7L, 4L, 2L, 9L, 5L, 7L, 
+                                NA)), .Names = c("org_code", "status", 
+                                                 "org_name", "year", "month", 
+                                                 "measure", "count"), 
+                 class = "data.frame", row.names = c(NA, -13L))
+
+dat
+```
+
+```
+##    org_code status           org_name year month   measure count
+## 1        1A     FT       St Elsewhere 2016    11 measure_a     1
+## 2        1A     FT       St Elsewhere 2016    11 measure_b     5
+## 3        1A     FT       St Elsewhere 2016    11 measure_c     7
+## 4        1A     FT       St Elsewhere 2016    12 measure_a     5
+## 5        1A     FT       St Elsewhere 2016    12 measure_b     9
+## 6        1A     FT       St Elsewhere 2016    12 measure_c     3
+## 7        1A     FT       St Elsewhere 2017     1 measure_a     7
+## 8        1A     FT       St Elsewhere 2017     1 measure_b     4
+## 9        1A     FT       St Elsewhere 2017     1 measure_c     2
+## 10       1A     FT       St Elsewhere 2017     2 measure_a     9
+## 11       1A     FT       St Elsewhere 2017     2 measure_b     5
+## 12       1A     FT       St Elsewhere 2017     2 measure_c     7
+## 13       2F     -- St James Infirmary   NA    NA      <NA>    NA
+```
+
+Using `complete` I get what I need. 
+I also need to use `unite` and `separate`, otherwise I get rows for 2016 month 1 and 2016 month 2.
+
+
+```r
+dat2 <- dat %>% 
+  unite(year_month, year, month) %>% 
+  complete(year_month, measure, 
+                         nesting(org_code, status, org_name), 
+                        fill = list(count = 0)) %>% 
+  separate(year_month, into = c("year", "month")) %>%
+  # don't strictly need these lines, but they make the result more logical based on original data
+  select(org_code, status, org_name, year, month, measure) %>% # re-order cols
+  arrange(org_code, year, month, measure) # sort data
+tail(dat2, n = 12)
+```
+
+```
+## # A tibble: 12 x 6
+##    org_code status           org_name  year month   measure
+##       <chr>  <chr>              <chr> <chr> <chr>     <chr>
+##  1       2F     -- St James Infirmary  2016    12 measure_a
+##  2       2F     -- St James Infirmary  2016    12 measure_b
+##  3       2F     -- St James Infirmary  2016    12 measure_c
+##  4       2F     -- St James Infirmary  2017     1 measure_a
+##  5       2F     -- St James Infirmary  2017     1 measure_b
+##  6       2F     -- St James Infirmary  2017     1 measure_c
+##  7       2F     -- St James Infirmary  2017     2 measure_a
+##  8       2F     -- St James Infirmary  2017     2 measure_b
+##  9       2F     -- St James Infirmary  2017     2 measure_c
+## 10       2F     -- St James Infirmary    NA    NA measure_a
+## 11       2F     -- St James Infirmary    NA    NA measure_b
+## 12       2F     -- St James Infirmary    NA    NA measure_c
+```
+
+The manual adds a helpfull explanation of the use of `nesting`:
+
+> "To find all unique combinations of x, y and z, including those not found in the data, supply each variable as a separate argument. To find only the combinations that occur in the data, use nest: expand(df, nesting(x, y, z))."
