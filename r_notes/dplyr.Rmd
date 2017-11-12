@@ -279,7 +279,8 @@ test <- test %>%
   mutate(rolling_4 = rowSums(.[3:6], na.rm = TRUE))
 test
 ```
-                                                                                 ## Wrapping dplyr in a function
+
+## Wrapping dplyr in a function
 
 Programming with dplyr has changed a lot with the release of dplyr 0.7. 
 Previously there was a convoluted process using lazy eval and teh `interp` function. 
@@ -361,8 +362,9 @@ Oh, and incidentally, trying to simplify this with n = n() returns the error `Er
 
 I don't know why. 
 
-## Mutate in a function
-ok me a long time to find a solution for this. 
+### Mutate in a function
+This is an example from when dplyr used lazyeval for function writing. 
+I'm keeping it here for reference.
 
 I tinkered around with `quote()` and `substitute()` for a bit. 
 I don't understand why a simple `mutate_()` doesn't work. 
@@ -436,7 +438,7 @@ stocks <-
   Z = rnorm(10, 0, 4)
   )
   stocks
-  gather(stocks, stock, price, -time)
+  gather(data = stocks, key = stock, value = price, -time)
 
 ```
 

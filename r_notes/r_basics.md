@@ -1,6 +1,4 @@
----
-exclude: true
----
+
 
 
 ## Dates
@@ -63,7 +61,7 @@ format(x, "%A, %d %B %Y")
 ## [1] "Monday, 02 October 2017"
 ```
 
-## logical operators
+## Logical operators
 
 
 ```r
@@ -188,3 +186,86 @@ x[x$height == "Short", ]
 ## 5  5     7  Short
 ```
 
+## Missing values
+
+Missing values are represented as `NA` in R. 
+These are handled slightly differently to missing values in other statistical packages. 
+`NA` values cannot be compared with other values.
+
+
+```r
+x <- NA
+class(x)
+```
+
+```
+## [1] "logical"
+```
+
+```r
+x < 1
+```
+
+```
+## [1] NA
+```
+
+```r
+x > 1
+```
+
+```
+## [1] NA
+```
+
+```r
+is.na(x)
+```
+
+```
+## [1] TRUE
+```
+
+```r
+dat <- data.frame(x = c(1,2, NA), y = c("a", "b", "c"))
+dat[is.na(dat$x) == TRUE, ]
+```
+
+```
+##    x y
+## 3 NA c
+```
+
+## Factors
+
+Text can be stored in two ways: as character strings or as factors. 
+When sorted, character strings are ordered alphabetically. 
+Factors, however, are ordered as set by the levels of the factor. 
+
+
+```r
+dat <- data.frame(x = c("triangle", "triangle", "triangle", "square", "square",
+                        "circle"), 
+                  stringsAsFactors = FALSE)
+
+table(dat$x) # alphabetical sorting
+```
+
+```
+## 
+##   circle   square triangle 
+##        1        2        3
+```
+
+```r
+dat$x <- factor(dat$x, levels = c("square", "circle", "triangle"))
+table(dat$x) # sorting as determined by levels of factor.
+```
+
+```
+## 
+##   square   circle triangle 
+##        2        1        3
+```
+
+So this can be used to determine the ordering of groups in plots. 

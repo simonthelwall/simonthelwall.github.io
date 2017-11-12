@@ -95,4 +95,41 @@ x[2, 3]
 # all cols for 'short' observations
 x[x$height == "Short", ]
 ```
+
+### Vectors
+
+### Lists
+
 ## Missing values
+
+Missing values are represented as `NA` in R. 
+These are handled slightly differently to missing values in other statistical packages. 
+`NA` values cannot be compared with other values.
+
+```{r}
+x <- NA
+class(x)
+x < 1
+x > 1
+is.na(x)
+dat <- data.frame(x = c(1,2, NA), y = c("a", "b", "c"))
+dat[is.na(dat$x) == TRUE, ]
+```
+
+## Factors
+
+Text can be stored in two ways: as character strings or as factors. 
+When sorted, character strings are ordered alphabetically. 
+Factors, however, are ordered as set by the levels of the factor. 
+
+```{r factors}
+dat <- data.frame(x = c("triangle", "triangle", "triangle", "square", "square",
+                        "circle"), 
+                  stringsAsFactors = FALSE)
+
+table(dat$x) # alphabetical sorting
+dat$x <- factor(dat$x, levels = c("square", "circle", "triangle"))
+table(dat$x) # sorting as determined by levels of factor.
+```
+
+So this can be used to determine the ordering of groups in plots. 

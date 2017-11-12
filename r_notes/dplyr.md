@@ -1,9 +1,6 @@
 ---
-exclude: yes
+exclude: true
 --- 
-
-* TOC
-{:toc}
 
 # dplyr and tidyr
   
@@ -15,6 +12,9 @@ Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 Together with ggplot2, lubridate, stringr and others they form the 'tidyverse'.
+
+* TOC
+{:toc}
 
 ## The basics
 
@@ -364,10 +364,10 @@ test %>%
 ## # A tibble: 4 x 2
 ##     name `mean(value)`
 ##    <chr>         <dbl>
-## 1  apple   -0.09557118
-## 2   bear    0.09134169
-## 3 orange   -0.01546917
-## 4   pear   -0.27539133
+## 1  apple    0.25973794
+## 2   bear   -1.76249390
+## 3 orange   -0.67915321
+## 4   pear    0.04660042
 ```
 
 ```r
@@ -381,10 +381,10 @@ test %>% group_by(reallyreallyreallyreallyreallylongvarname) %>%
 ## # A tibble: 4 x 2
 ##   reallyreallyreallyreallyreallylongvarname `mean(value)`
 ##                                       <chr>         <dbl>
-## 1                                     apple   -0.09557118
-## 2                                      bear    0.09134169
-## 3                                    orange   -0.01546917
-## 4                                      pear   -0.27539133
+## 1                                     apple    0.25973794
+## 2                                      bear   -1.76249390
+## 3                                    orange   -0.67915321
+## 4                                      pear    0.04660042
 ```
 
 This can be resolved using `quote()`.
@@ -537,7 +537,8 @@ test
 ## 9     9     1    1    1    1    1         4
 ## 10   10     1    1    1    1    1         4
 ```
-                                                                                 ## Wrapping dplyr in a function
+
+## Wrapping dplyr in a function
 
 Programming with dplyr has changed a lot with the release of dplyr 0.7. 
 Previously there was a convoluted process using lazy eval and teh `interp` function. 
@@ -657,8 +658,9 @@ Oh, and incidentally, trying to simplify this with n = n() returns the error `Er
 
 I don't know why. 
 
-## Mutate in a function
-ok me a long time to find a solution for this. 
+### Mutate in a function
+This is an example from when dplyr used lazyeval for function writing. 
+I'm keeping it here for reference.
 
 I tinkered around with `quote()` and `substitute()` for a bit. 
 I don't understand why a simple `mutate_()` doesn't work. 
@@ -748,55 +750,55 @@ stocks <-
 ```
 
 ```
-##          time          X          Y          Z
-## 1  2009-01-01  1.2016221 -0.4846635 -2.7125514
-## 2  2009-01-02 -1.6422376  0.1221024  1.3957550
-## 3  2009-01-03 -0.4100961  4.3015740 -3.9971027
-## 4  2009-01-04 -1.2405362 -6.7838361  2.1277799
-## 5  2009-01-05  1.3222849 -5.8374972  4.7703500
-## 6  2009-01-06 -0.2086279 -2.2065073 -4.7859668
-## 7  2009-01-07 -1.3589766 -1.6496938  4.3019125
-## 8  2009-01-08 -1.1278038  3.5212773  0.1776938
-## 9  2009-01-09 -0.6093792 -4.9282844 -3.0586621
-## 10 2009-01-10  0.4340521 -3.6626172  3.4838914
+##          time           X           Y          Z
+## 1  2009-01-01  1.00940452  0.07093874  1.6214842
+## 2  2009-01-02  0.25487415 -2.13309904 -0.3887999
+## 3  2009-01-03 -0.55292270  5.11738852 -2.8190967
+## 4  2009-01-04 -0.24482233  0.28037840  4.6608238
+## 5  2009-01-05  0.18651045 -0.45920994  3.2519773
+## 6  2009-01-06 -1.20496291  1.16166024 -1.7085599
+## 7  2009-01-07  0.07580323 -0.79151519 -1.6985941
+## 8  2009-01-08  1.38771734 -1.12101594 -0.9197999
+## 9  2009-01-09  0.66076910  0.71171961  0.9206098
+## 10 2009-01-10  1.69834693 -0.52658270  2.1006868
 ```
 
 ```r
-  gather(stocks, stock, price, -time)
+  gather(data = stocks, key = stock, value = price, -time)
 ```
 
 ```
-##          time stock      price
-## 1  2009-01-01     X  1.2016221
-## 2  2009-01-02     X -1.6422376
-## 3  2009-01-03     X -0.4100961
-## 4  2009-01-04     X -1.2405362
-## 5  2009-01-05     X  1.3222849
-## 6  2009-01-06     X -0.2086279
-## 7  2009-01-07     X -1.3589766
-## 8  2009-01-08     X -1.1278038
-## 9  2009-01-09     X -0.6093792
-## 10 2009-01-10     X  0.4340521
-## 11 2009-01-01     Y -0.4846635
-## 12 2009-01-02     Y  0.1221024
-## 13 2009-01-03     Y  4.3015740
-## 14 2009-01-04     Y -6.7838361
-## 15 2009-01-05     Y -5.8374972
-## 16 2009-01-06     Y -2.2065073
-## 17 2009-01-07     Y -1.6496938
-## 18 2009-01-08     Y  3.5212773
-## 19 2009-01-09     Y -4.9282844
-## 20 2009-01-10     Y -3.6626172
-## 21 2009-01-01     Z -2.7125514
-## 22 2009-01-02     Z  1.3957550
-## 23 2009-01-03     Z -3.9971027
-## 24 2009-01-04     Z  2.1277799
-## 25 2009-01-05     Z  4.7703500
-## 26 2009-01-06     Z -4.7859668
-## 27 2009-01-07     Z  4.3019125
-## 28 2009-01-08     Z  0.1776938
-## 29 2009-01-09     Z -3.0586621
-## 30 2009-01-10     Z  3.4838914
+##          time stock       price
+## 1  2009-01-01     X  1.00940452
+## 2  2009-01-02     X  0.25487415
+## 3  2009-01-03     X -0.55292270
+## 4  2009-01-04     X -0.24482233
+## 5  2009-01-05     X  0.18651045
+## 6  2009-01-06     X -1.20496291
+## 7  2009-01-07     X  0.07580323
+## 8  2009-01-08     X  1.38771734
+## 9  2009-01-09     X  0.66076910
+## 10 2009-01-10     X  1.69834693
+## 11 2009-01-01     Y  0.07093874
+## 12 2009-01-02     Y -2.13309904
+## 13 2009-01-03     Y  5.11738852
+## 14 2009-01-04     Y  0.28037840
+## 15 2009-01-05     Y -0.45920994
+## 16 2009-01-06     Y  1.16166024
+## 17 2009-01-07     Y -0.79151519
+## 18 2009-01-08     Y -1.12101594
+## 19 2009-01-09     Y  0.71171961
+## 20 2009-01-10     Y -0.52658270
+## 21 2009-01-01     Z  1.62148418
+## 22 2009-01-02     Z -0.38879991
+## 23 2009-01-03     Z -2.81909672
+## 24 2009-01-04     Z  4.66082380
+## 25 2009-01-05     Z  3.25197731
+## 26 2009-01-06     Z -1.70855985
+## 27 2009-01-07     Z -1.69859410
+## 28 2009-01-08     Z -0.91979994
+## 29 2009-01-09     Z  0.92060978
+## 30 2009-01-10     Z  2.10068679
 ```
 
 ### long to wide
@@ -867,12 +869,12 @@ head(dat)
 ## # A tibble: 6 x 5
 ##   Person  Time Score1 Score2 Score3
 ##    <chr> <chr>  <dbl>  <dbl>  <dbl>
-## 1   greg   Pre     78     80   84.0
-## 2   greg  Post     79     77   83.0
-## 3  sally   Pre     75     75   80.0
-## 4  sally  Post     79     80   84.5
-## 5    sue   Pre     76     75   80.5
-## 6    sue  Post     75     76   80.5
+## 1   greg   Pre     76     73   79.5
+## 2   greg  Post     75     76   80.5
+## 3  sally   Pre     76     77   81.5
+## 4  sally  Post     77     78   82.5
+## 5    sue   Pre     82     84   88.0
+## 6    sue  Post     71     69   75.0
 ```
 
 ```r
@@ -886,9 +888,9 @@ dat %>%
 ## # A tibble: 3 x 7
 ##   Person Post.Score1 Post.Score2 Post.Score3 Pre.Score1 Pre.Score2
 ## *  <chr>       <dbl>       <dbl>       <dbl>      <dbl>      <dbl>
-## 1   greg          79          77        83.0         78         80
-## 2  sally          79          80        84.5         75         75
-## 3    sue          75          76        80.5         76         75
+## 1   greg          75          76        80.5         76         73
+## 2  sally          77          78        82.5         76         77
+## 3    sue          71          69        75.0         82         84
 ## # ... with 1 more variables: Pre.Score3 <dbl>
 ```
 
