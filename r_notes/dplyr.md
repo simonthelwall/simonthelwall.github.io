@@ -1,4 +1,7 @@
-  
+---
+exclude: true
+--- 
+
 # dplyr and tidyr
   
 dplyr introduces a consistent grammar of data manipulation for R. 
