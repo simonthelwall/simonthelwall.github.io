@@ -2,6 +2,9 @@
 exclude: true
 --- 
 
+* TOC
+{:toc}
+
 # dplyr and tidyr
   
 dplyr introduces a consistent grammar of data manipulation for R. 
@@ -12,9 +15,6 @@ Rather than the vertical bar `|`, the symbol is `%>%`.
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 Together with ggplot2, lubridate, stringr and others they form the 'tidyverse'.
-
-* TOC
-{:toc}
 
 ## The basics
 
@@ -537,8 +537,7 @@ test
 ## 9     9     1    1    1    1    1         4
 ## 10   10     1    1    1    1    1         4
 ```
-
-## Wrapping dplyr in a function
+                                                                                 ## Wrapping dplyr in a function
 
 Programming with dplyr has changed a lot with the release of dplyr 0.7. 
 Previously there was a convoluted process using lazy eval and teh `interp` function. 
@@ -658,9 +657,8 @@ Oh, and incidentally, trying to simplify this with n = n() returns the error `Er
 
 I don't know why. 
 
-### Mutate in a function
-This is an example from when dplyr used lazyeval for function writing. 
-I'm keeping it here for reference.
+## Mutate in a function
+ok me a long time to find a solution for this. 
 
 I tinkered around with `quote()` and `substitute()` for a bit. 
 I don't understand why a simple `mutate_()` doesn't work. 
@@ -699,6 +697,115 @@ temp_dat
 # from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-within-function
 ```
 
+## Joining
+
+Very similar to plyr, but the function name specifies the type of join rather than specifying within the function. 
+
+
+```r
+                                                                                 data3 <- left_join(data1, data2, by = "common.var")
+```
+                                                                                 See SQL Venn for reminders. 
+
+Usefully, one can join by more than one variable. 
+This is useful when a single variable does not provide a unique identifier. 
+
+
+
+```r
+x <- data.frame(
+  var1 = c(1, 1, 2),
+  var2 = c("a", "b", "b"),
+  var3 = c("x", "y", "z")
+  )
+y <- data.frame(var1 = c(1, 1, 2),
+                var2 = c("a", "b", "b"),
+                var4 = c(20, 21, 22)
+                )
+x
+```
+
+```
+##   var1 var2 var3
+## 1    1    a    x
+## 2    1    b    y
+## 3    2    b    z
+```
+
+```r
+z <- left_join(x, y, by = c("var1", "var2"))
+z
+```
+
+```
+##   var1 var2 var3 var4
+## 1    1    a    x   20
+## 2    1    b    y   21
+## 3    2    b    z   22
+```
+
+### anti_join
+
+Anti join retains those records which are in the left table but not the right and retains the columns of the left table. 
+
+This is probably more useful than one might at first think. 
+
+
+```r
+require(dplyr)
+
+# want those in 2, that do not appear in 1
+anti1 <- data.frame(id = c(1, 1, 1, 2, 3),
+                    abx = c("pen", "amx", "flu", "pen", "amx"))
+anti2 <- data.frame( id = c(1, 1, 1, 2, 4),
+                     abx = c("pen", "amx", "flu", "flu", "pen"),
+                     res = c("r", "i", "s", "i", "s")
+                     )
+anti1
+```
+
+```
+##   id abx
+## 1  1 pen
+## 2  1 amx
+## 3  1 flu
+## 4  2 pen
+## 5  3 amx
+```
+
+```r
+anti2
+```
+
+```
+##   id abx res
+## 1  1 pen   r
+## 2  1 amx   i
+## 3  1 flu   s
+## 4  2 flu   i
+## 5  4 pen   s
+```
+
+```r
+anti3 <- anti_join(anti2, anti1, by = "id")
+anti3
+```
+
+```
+##   id abx res
+## 1  4 pen   s
+```
+
+```r
+anti3 <- anti_join(anti2, anti1, by = c("id", "abx"))
+anti3
+```
+
+```
+##   id abx res
+## 1  2 flu   i
+## 2  4 pen   s
+```
 
 ## Hypothesis tests and dplyr
 
@@ -894,33 +1001,43 @@ dat %>%
 ## # ... with 1 more variables: Pre.Score3 <dbl>
 ```
 
-## Joining
+### Expanding data to cover all permutations
 
-Very similar to plyr, but the function name specifies the type of join rather than specifying within the function. 
+There are a number of options for this. 
+A combination of spreading to wide, then gathering to long is one approach. 
+However, tidyr also provides `complete` and `expand`. 
+I quite often need to produce summary counts by an organisation and if one organisation hasn't reported any cases for a period then there will be a single `NA` row for that organisation, rather than multiple rows of zero. 
+
+By the description in the manual, `complete` is 
+
+> "a wrapper around expand(), dplyr::left_join() and replace_na() that’s useful for completing missing combinations of data"
+
+Given the data below, I want to have all the rows for St James Infirmary that I also have for St Elsewhere. 
 
 
 ```r
-                                                                                 data3 <- left_join(data1, data2, by = "common.var")
-```
-                                                                                 See SQL Venn for reminders. 
-
-Usefully, one can join by more than one variable. 
-This is useful when a single variable does not provide a unique identifier. 
-
-
-
-```r
-x <- data.frame(
-  var1 = c(1, 1, 2),
-  var2 = c("a", "b", "b"),
-  var3 = c("x", "y", "z")
-  )
-y <- data.frame(var1 = c(1, 1, 2),
-                var2 = c("a", "b", "b"),
-                var4 = c(20, 21, 22)
-                )
-x
-```
+dat <- structure(list(org_code = c("1A", "1A", "1A", "1A", "1A", "1A", 
+                                   "1A", "1A", "1A", "1A", "1A", "1A", "2F"), 
+                      status = c("FT", "FT", "FT", "FT", "FT", "FT", "FT", 
+                                 "FT", "FT", "FT", "FT", "FT", "--"), 
+                      org_name = c("St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St Elsewhere", "St Elsewhere", "St Elsewhere", 
+                                   "St James Infirmary"), 
+                      year = c(2016L, 2016L, 2016L, 2016L, 2016L, 2016L, 2017L, 
+                               2017L, 2017L, 2017L, 2017L, 2017L, NA), 
+                      month = c(11L, 11L, 11L, 12L, 12L, 12L, 1L, 1L, 1L, 2L, 
+                                2L, 2L, NA), 
+                      measure = c("measure_a", "measure_b", "measure_c", 
+                                  "measure_a", "measure_b", "measure_c", 
+                                  "measure_a", "measure_b", "measure_c", 
+                                  "measure_a", "measure_b", "measure_c", NA), 
+                      count = c(1L, 5L, 7L, 5L, 9L, 3L, 7L, 4L, 2L, 9L, 5L, 7L, 
+                                NA)), .Names = c("org_code", "status", 
+                                                 "org_name", "year", "month", 
+                                                 "measure", "count"), 
+                 class = "data.frame", row.names = c(NA, -13L))
 
 ```
 ##   var1 var2 var3
@@ -929,77 +1046,58 @@ x
 ## 3    2    b    z
 ```
 
-```r
-z <- left_join(x, y, by = c("var1", "var2"))
-z
+```
+##    org_code status           org_name year month   measure count
+## 1        1A     FT       St Elsewhere 2016    11 measure_a     1
+## 2        1A     FT       St Elsewhere 2016    11 measure_b     5
+## 3        1A     FT       St Elsewhere 2016    11 measure_c     7
+## 4        1A     FT       St Elsewhere 2016    12 measure_a     5
+## 5        1A     FT       St Elsewhere 2016    12 measure_b     9
+## 6        1A     FT       St Elsewhere 2016    12 measure_c     3
+## 7        1A     FT       St Elsewhere 2017     1 measure_a     7
+## 8        1A     FT       St Elsewhere 2017     1 measure_b     4
+## 9        1A     FT       St Elsewhere 2017     1 measure_c     2
+## 10       1A     FT       St Elsewhere 2017     2 measure_a     9
+## 11       1A     FT       St Elsewhere 2017     2 measure_b     5
+## 12       1A     FT       St Elsewhere 2017     2 measure_c     7
+## 13       2F     -- St James Infirmary   NA    NA      <NA>    NA
 ```
 
-```
-##   var1 var2 var3 var4
-## 1    1    a    x   20
-## 2    1    b    y   21
-## 3    2    b    z   22
-```
+Using `complete` I get what I need. 
+I also need to use `unite` and `separate`, otherwise I get rows for 2016 month 1 and 2016 month 2.
 
-### anti_join
-
-Anti join retains those records which are in the left table but not the right and retains the columns of the left table. 
-
-This is probably more useful than one might at first think. 
-
-
-```r
-require(dplyr)
-
-# want those in 2, that do not appear in 1
-anti1 <- data.frame(id = c(1, 1, 1, 2, 3),
-                    abx = c("pen", "amx", "flu", "pen", "amx"))
-anti2 <- data.frame( id = c(1, 1, 1, 2, 4),
-                     abx = c("pen", "amx", "flu", "flu", "pen"),
-                     res = c("r", "i", "s", "i", "s")
-                     )
-anti1
-```
-
-```
-##   id abx
-## 1  1 pen
-## 2  1 amx
-## 3  1 flu
-## 4  2 pen
-## 5  3 amx
-```
 
 ```r
-anti2
+dat2 <- dat %>% 
+  unite(year_month, year, month) %>% 
+  complete(year_month, measure, 
+                         nesting(org_code, status, org_name), 
+                        fill = list(count = 0)) %>% 
+  separate(year_month, into = c("year", "month")) %>%
+  # don't strictly need these lines, but they make the result more logical based on original data
+  select(org_code, status, org_name, year, month, measure) %>% # re-order cols
+  arrange(org_code, year, month, measure) # sort data
+tail(dat2, n = 12)
 ```
 
 ```
-##   id abx res
-## 1  1 pen   r
-## 2  1 amx   i
-## 3  1 flu   s
-## 4  2 flu   i
-## 5  4 pen   s
+## # A tibble: 12 x 6
+##    org_code status           org_name  year month   measure
+##       <chr>  <chr>              <chr> <chr> <chr>     <chr>
+##  1       2F     -- St James Infirmary  2016    12 measure_a
+##  2       2F     -- St James Infirmary  2016    12 measure_b
+##  3       2F     -- St James Infirmary  2016    12 measure_c
+##  4       2F     -- St James Infirmary  2017     1 measure_a
+##  5       2F     -- St James Infirmary  2017     1 measure_b
+##  6       2F     -- St James Infirmary  2017     1 measure_c
+##  7       2F     -- St James Infirmary  2017     2 measure_a
+##  8       2F     -- St James Infirmary  2017     2 measure_b
+##  9       2F     -- St James Infirmary  2017     2 measure_c
+## 10       2F     -- St James Infirmary    NA    NA measure_a
+## 11       2F     -- St James Infirmary    NA    NA measure_b
+## 12       2F     -- St James Infirmary    NA    NA measure_c
 ```
 
-```r
-anti3 <- anti_join(anti2, anti1, by = "id")
-anti3
-```
+The manual adds a helpfull explanation of the use of `nesting`:
 
-```
-##   id abx res
-## 1  4 pen   s
-```
-
-```r
-anti3 <- anti_join(anti2, anti1, by = c("id", "abx"))
-anti3
-```
-
-```
-##   id abx res
-## 1  2 flu   i
-## 2  4 pen   s
-```
+> "To find all unique combinations of x, y and z, including those not found in the data, supply each variable as a separate argument. To find only the combinations that occur in the data, use nest: expand(df, nesting(x, y, z))."
