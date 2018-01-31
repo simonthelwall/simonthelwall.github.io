@@ -1,9 +1,13 @@
 ---
-title: "Exporting data to Excel"
-author: "Simon Thelwall"
-date: "13 November 2017"
-output: html_document
+output:
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+    exclude: true
 ---
+
+# Exporting data to Excel
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

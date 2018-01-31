@@ -1,10 +1,5 @@
 ---
-output:
-  html_document:
-    keep_md: true
-    toc: true
-    toc_float: true
-    exclude: true
+exclude: true
 ---
 
 
