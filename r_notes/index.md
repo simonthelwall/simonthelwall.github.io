@@ -18,6 +18,7 @@ description: Some notes about using R in a fairly disorganised collection
  - [bookdown](bookdown.md)
  - [spatial statistics](spatial_stats.md)
  - [packages](packages.md)
+ - [purrr notes](purrr.md)
 
 ## Getting data in
 First set the working directory
