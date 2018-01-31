@@ -1,0 +1,43 @@
+---
+title: "Exporting data to Excel"
+author: "Simon Thelwall"
+date: "13 November 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There are a lot of options for taking data from R to Excel. 
+I've settled with openxlsx for two reasons:
+
+ * No java dependencies
+ * Able to add formatting 
+ 
+## Setup 
+
+```{r setup2}
+library(openxlsx)
+data("mtcars")
+
+my_workbook <- createWorkbook(creator = "Simon Thelwall")
+```
+
+## Add data
+
+```{r add-data}
+writeData(wb = my_workbook, x = mtcars, sheet = 1, startCol = 3, startRow = 3,
+          colNames = TRUE)
+```
+
+## Add some styling
+
+```{r add-style}
+header_style <- createStyle(textDecoration = "bold", border = c("top", "bottom"),
+                            borderStyle = "thin", borderColour = "black")
+footer_style <- createStyle(border = c("bottom"),
+                            borderStyle = "thin", borderColour = "black")
+
+addStyle(wb = my_workbook)
+```
