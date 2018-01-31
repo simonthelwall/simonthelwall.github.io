@@ -1,12 +1,13 @@
 ---
-title: "statistics"
 output: 
   html_document:
     keep_md: true
     exclude: true
 ---
 
-```{r, setup, echo = FALSE}
+# Statistics
+
+```{r, setup, echo = TRUE}
 library(ggplot2)
 # library(GGally)
 data("mtcars")
@@ -14,7 +15,7 @@ data("mtcars")
 
 ```
 
-# Polynomial regression
+## Polynomial regression
 
 ```{r polynomial}
 # linear first
@@ -31,9 +32,9 @@ p <- ggplot(data = mtcars, aes(x = disp, y = wt)) +
 p
 ```
 
-# Quantile regression
+## Quantile regression
 
-# Ordinal regression
+## Ordinal regression
 
 ```{r ordinal}
 # install.packages("ordinal")

@@ -1,5 +1,11 @@
+---
+exclude: true
+---
 
+# Basics in R
 
+* TOC
+{:toc}
 
 ## Dates
 

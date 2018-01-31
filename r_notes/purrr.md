@@ -2,7 +2,8 @@
 exclude: true
 ---
 
-
+* TOC
+{:toc}
 
 # purrr
 
