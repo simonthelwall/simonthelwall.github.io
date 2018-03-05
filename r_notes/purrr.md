@@ -1,9 +1,6 @@
 ---
 exclude: true
----
-
-* TOC
-{:toc}
+--- 
 
 # purrr
 
@@ -15,6 +12,9 @@ If you have any tips on how to tweak my code, please let me know.
 
 The idea is that purrr will iterate a function over a vector.
 This can be used to iterate regression models by subsets of data, or load in data with a common structure. 
+
+* TOC
+{:toc}
 
 ## Read multiple Excel files into memory
 
@@ -78,3 +78,78 @@ table(popn$year, useNA = "ifany")
 ```
 
 This has loaded all of the Excel files into R and I can continue my work. 
+
+## Mutating a single variable in purrr
+
+Having loaded my data in with map as above, I had another problem: in different data sets the same variables had different classes and `bind_rows` would not coerce the two classes. 
+My immediate response was to try to mutate the column in a `map` command. 
+It was much harder than expected, but the solution was surprisingly easy. 
+
+The problem was where I was trying to put the `.` 
+I thought it went `map(., ~mutate(am = as.integer(am)))` which doesn't work. 
+
+
+```r
+# set up
+library(dplyr)
+```
+
+```
+## Warning: package 'dplyr' was built under R version 3.4.2
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
+library(purrr)
+```
+
+```
+## Warning: package 'purrr' was built under R version 3.4.3
+```
+
+```r
+data("mtcars")
+
+mtcars$am <- as.character(mtcars$am)
+
+# a list of 3 data frames
+mtcars <- mtcars %>% 
+  split(.$cyl)
+
+# one variable has a different class for one data frame
+mtcars[[3]]$am <- as.integer(mtcars[[3]]$am)
+
+# check 
+for(i in 1:length(mtcars)){
+  print(class(mtcars[[i]]$am))
+}
+```
+
+```
+## [1] "character"
+## [1] "character"
+## [1] "integer"
+```
+
+```r
+# The solution
+mtcars <- mtcars %>% 
+  map(~mutate(., am = as.integer(am))) %>% 
+  bind_rows()
+```
