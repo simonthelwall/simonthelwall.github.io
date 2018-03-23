@@ -1,7 +1,11 @@
 ---
-exclude: true
---- 
+    toc: true
+    toc_float: true
+    exclude: true
+---
 
+This needs a massive clean up. You may wish to disregard the information below. 
+  
 # dplyr and tidyr
   
 dplyr introduces a consistent grammar of data manipulation for R. 
@@ -104,12 +108,12 @@ mtcars %>%
 ## # A tibble: 6 x 2
 ##     cyl new_cyl
 ##   <dbl>   <dbl>
-## 1     6      16
-## 2     6      16
-## 3     4       4
-## 4     6      16
-## 5     8     200
-## 6     6      16
+## 1    6.     16.
+## 2    6.     16.
+## 3    4.      4.
+## 4    6.     16.
+## 5    8.    200.
+## 6    6.     16.
 ```
 
 `case_when()` vectorises multiple `if()` `else()` statements, and it's a lot neater than writing nested `ifelse()` statements. 
@@ -281,12 +285,12 @@ out
 ```
 ## # A tibble: 4 x 3
 ## # Groups:   id, org [4]
-##      id    org   test
-##   <dbl> <fctr> <fctr>
-## 1     1  apple      S
-## 2     1   bear      S
-## 3     2 orange      R
-## 4     2   pear      S
+##      id org    test 
+##   <dbl> <fct>  <fct>
+## 1    1. apple  S    
+## 2    1. bear   S    
+## 3    2. orange R    
+## 4    2. pear   S
 ```
 
 ## Summarising data
@@ -335,10 +339,10 @@ out
 
 ```
 ## # A tibble: 2 x 6
-##    group     n successes pc.succ pc.lci pc.uci
-##   <fctr> <int>     <dbl>   <dbl>  <dbl>  <dbl>
-## 1      A    10         1      10   0.25  44.50
-## 2      B    10         2      20   2.52  55.61
+##   group     n successes pc.succ pc.lci pc.uci
+##   <fct> <int>     <dbl>   <dbl>  <dbl>  <dbl>
+## 1 A        10        1.     10.  0.250   44.5
+## 2 B        10        2.     20.  2.52    55.6
 ```
                    
 Outside dplyr I would write `binom.confint(x,n,methods = "exact")$mean`. 
@@ -362,12 +366,12 @@ test %>%
 
 ```
 ## # A tibble: 4 x 2
-##     name `mean(value)`
-##    <chr>         <dbl>
-## 1  apple    0.56482150
-## 2   bear   -0.78052983
-## 3 orange   -0.02848124
-## 4   pear   -0.03458642
+##   name   `mean(value)`
+##   <chr>          <dbl>
+## 1 apple          0.783
+## 2 bear          -0.250
+## 3 orange        -0.817
+## 4 pear          -0.738
 ```
 
 ```r
@@ -380,11 +384,11 @@ test %>% group_by(reallyreallyreallyreallyreallylongvarname) %>%
 ```
 ## # A tibble: 4 x 2
 ##   reallyreallyreallyreallyreallylongvarname `mean(value)`
-##                                       <chr>         <dbl>
-## 1                                     apple    0.56482150
-## 2                                      bear   -0.78052983
-## 3                                    orange   -0.02848124
-## 4                                      pear   -0.03458642
+##   <chr>                                             <dbl>
+## 1 apple                                             0.783
+## 2 bear                                             -0.250
+## 3 orange                                           -0.817
+## 4 pear                                             -0.738
 ```
 
 This can be resolved using `quote()`.
@@ -415,16 +419,16 @@ mtcars %>% select(cyl, am, group_id)
 ## # A tibble: 32 x 3
 ##      cyl    am group_id
 ##    <dbl> <dbl>    <int>
-##  1     4     0        1
-##  2     4     0        1
-##  3     4     0        1
-##  4     4     1        2
-##  5     4     1        2
-##  6     4     1        2
-##  7     4     1        2
-##  8     4     1        2
-##  9     4     1        2
-## 10     4     1        2
+##  1    4.    0.        1
+##  2    4.    0.        1
+##  3    4.    0.        1
+##  4    4.    1.        2
+##  5    4.    1.        2
+##  6    4.    1.        2
+##  7    4.    1.        2
+##  8    4.    1.        2
+##  9    4.    1.        2
+## 10    4.    1.        2
 ## # ... with 22 more rows
 ```
 
@@ -598,8 +602,8 @@ out
 ## # A tibble: 2 x 4
 ##      vs     n cum.pc    pc
 ##   <dbl> <dbl>  <dbl> <dbl>
-## 1     0    18   56.2 56.25
-## 2     1    14  100.0 43.75
+## 1    0.   18.   56.2  56.2
+## 2    1.   14.  100.   43.8
 ```
 
 Done.^[But `tabyl()` in janitor makes this nicer]
@@ -618,9 +622,9 @@ mtcars %>% group_by(cyl) %>% summarise(n = n(), am = sum(am)) %>%
 ## # A tibble: 3 x 4
 ##     cyl     n    am pc.am
 ##   <dbl> <int> <dbl> <dbl>
-## 1     4    11     8 72.73
-## 2     6     7     3 42.86
-## 3     8    14     2 14.29
+## 1    4.    11    8.  72.7
+## 2    6.     7    3.  42.9
+## 3    8.    14    2.  14.3
 ```
 
 Then, to get this in a function, one needs to supply more than one variable to the data. 
@@ -648,9 +652,9 @@ tabFun(mtcars, cyl, am)
 ## # A tibble: 3 x 4
 ##     cyl     n sum_z    pc
 ##   <dbl> <int> <dbl> <dbl>
-## 1     4    11     8  72.7
-## 2     6     7     3  42.9
-## 3     8    14     2  14.3
+## 1    4.    11    8.  72.7
+## 2    6.     7    3.  42.9
+## 3    8.    14    2.  14.3
 ```
 Phew. 
 
@@ -835,12 +839,11 @@ test %>% group_by(organism.species.name, abx) %>%
 ```
 ## # A tibble: 3 x 7
 ## # Groups:   organism.species.name, abx [3]
-##   organism.species.name   abx n_sus_start n_res_start n_sus_end n_res_end
-##                   <chr> <chr>       <int>       <int>     <int>     <int>
-## 1                    ec  ceph           5          10        10         5
-## 2                    ec  carb           5           5         5         5
-## 3                    kp  ceph          10           5         5        10
-## # ... with 1 more variables: p.val <dbl>
+##   organism.specie~ abx   n_sus_start n_res_start n_sus_end n_res_end p.val
+##   <chr>            <chr>       <int>       <int>     <int>     <int> <dbl>
+## 1 ec               ceph            5          10        10         5 0.144
+## 2 ec               carb            5           5         5         5 1.00 
+## 3 kp               ceph           10           5         5        10 0.144
 ```
     
 ## tidyr
@@ -859,17 +862,17 @@ stocks <-
 ```
 
 ```
-##          time          X          Y          Z
-## 1  2009-01-01  1.0754247 -1.3511629  6.2021573
-## 2  2009-01-02 -0.1058395 -0.4480980 -6.8300604
-## 3  2009-01-03  0.5400719 -1.1017047  0.3019705
-## 4  2009-01-04  0.3167184 -2.0135963  8.1163282
-## 5  2009-01-05 -0.7128361  0.4596494 -0.5373487
-## 6  2009-01-06 -0.7845754 -2.2751278  1.7452287
-## 7  2009-01-07  2.3798284  0.3586549  1.0433291
-## 8  2009-01-08  1.7919471 -0.8699618 -4.9393762
-## 9  2009-01-09 -0.6169271  0.7986420  0.5764039
-## 10 2009-01-10 -0.7083195  1.9294995  0.7680511
+##          time           X          Y          Z
+## 1  2009-01-01 -0.96490628 -2.2865629  1.1583356
+## 2  2009-01-02  0.23771626  1.8636931 -1.2059783
+## 3  2009-01-03  1.85157623 -1.2561003 -2.4085726
+## 4  2009-01-04  2.46603081 -0.9873659 -0.3392859
+## 5  2009-01-05  0.07160344 -0.2059175 -1.6300527
+## 6  2009-01-06  1.35603402 -2.3155248 -6.7875525
+## 7  2009-01-07 -1.29518644  3.0519898 -5.2501476
+## 8  2009-01-08  0.69401304 -1.3941199 -5.4138858
+## 9  2009-01-09  0.41702352  1.8643268 -2.6931053
+## 10 2009-01-10  0.69930977 -0.4339952  0.1817706
 ```
 
 ```r
@@ -877,37 +880,37 @@ stocks <-
 ```
 
 ```
-##          time stock      price
-## 1  2009-01-01     X  1.0754247
-## 2  2009-01-02     X -0.1058395
-## 3  2009-01-03     X  0.5400719
-## 4  2009-01-04     X  0.3167184
-## 5  2009-01-05     X -0.7128361
-## 6  2009-01-06     X -0.7845754
-## 7  2009-01-07     X  2.3798284
-## 8  2009-01-08     X  1.7919471
-## 9  2009-01-09     X -0.6169271
-## 10 2009-01-10     X -0.7083195
-## 11 2009-01-01     Y -1.3511629
-## 12 2009-01-02     Y -0.4480980
-## 13 2009-01-03     Y -1.1017047
-## 14 2009-01-04     Y -2.0135963
-## 15 2009-01-05     Y  0.4596494
-## 16 2009-01-06     Y -2.2751278
-## 17 2009-01-07     Y  0.3586549
-## 18 2009-01-08     Y -0.8699618
-## 19 2009-01-09     Y  0.7986420
-## 20 2009-01-10     Y  1.9294995
-## 21 2009-01-01     Z  6.2021573
-## 22 2009-01-02     Z -6.8300604
-## 23 2009-01-03     Z  0.3019705
-## 24 2009-01-04     Z  8.1163282
-## 25 2009-01-05     Z -0.5373487
-## 26 2009-01-06     Z  1.7452287
-## 27 2009-01-07     Z  1.0433291
-## 28 2009-01-08     Z -4.9393762
-## 29 2009-01-09     Z  0.5764039
-## 30 2009-01-10     Z  0.7680511
+##          time stock       price
+## 1  2009-01-01     X -0.96490628
+## 2  2009-01-02     X  0.23771626
+## 3  2009-01-03     X  1.85157623
+## 4  2009-01-04     X  2.46603081
+## 5  2009-01-05     X  0.07160344
+## 6  2009-01-06     X  1.35603402
+## 7  2009-01-07     X -1.29518644
+## 8  2009-01-08     X  0.69401304
+## 9  2009-01-09     X  0.41702352
+## 10 2009-01-10     X  0.69930977
+## 11 2009-01-01     Y -2.28656294
+## 12 2009-01-02     Y  1.86369308
+## 13 2009-01-03     Y -1.25610032
+## 14 2009-01-04     Y -0.98736586
+## 15 2009-01-05     Y -0.20591753
+## 16 2009-01-06     Y -2.31552481
+## 17 2009-01-07     Y  3.05198983
+## 18 2009-01-08     Y -1.39411992
+## 19 2009-01-09     Y  1.86432684
+## 20 2009-01-10     Y -0.43399515
+## 21 2009-01-01     Z  1.15833562
+## 22 2009-01-02     Z -1.20597831
+## 23 2009-01-03     Z -2.40857263
+## 24 2009-01-04     Z -0.33928594
+## 25 2009-01-05     Z -1.63005272
+## 26 2009-01-06     Z -6.78755252
+## 27 2009-01-07     Z -5.25014763
+## 28 2009-01-08     Z -5.41388583
+## 29 2009-01-09     Z -2.69310527
+## 30 2009-01-10     Z  0.18177060
 ```
 
 ### long to wide
@@ -976,14 +979,14 @@ head(dat)
 
 ```
 ## # A tibble: 6 x 5
-##   Person  Time Score1 Score2 Score3
-##    <chr> <chr>  <dbl>  <dbl>  <dbl>
-## 1   greg   Pre     72     72   77.0
-## 2   greg  Post     83     86   89.5
-## 3  sally   Pre     85     87   91.0
-## 4  sally  Post     74     77   80.5
-## 5    sue   Pre     84     86   90.0
-## 6    sue  Post     81     82   86.5
+##   Person Time  Score1 Score2 Score3
+##   <chr>  <chr>  <dbl>  <dbl>  <dbl>
+## 1 greg   Pre      79.    78.   83.5
+## 2 greg   Post     83.    85.   89.0
+## 3 sally  Pre      73.    73.   78.0
+## 4 sally  Post     74.    74.   79.0
+## 5 sue    Pre      79.    79.   84.0
+## 6 sue    Post     81.    79.   85.0
 ```
 
 ```r
@@ -996,11 +999,11 @@ dat %>%
 ```
 ## # A tibble: 3 x 7
 ##   Person Post.Score1 Post.Score2 Post.Score3 Pre.Score1 Pre.Score2
-## *  <chr>       <dbl>       <dbl>       <dbl>      <dbl>      <dbl>
-## 1   greg          83          86        89.5         72         72
-## 2  sally          74          77        80.5         85         87
-## 3    sue          81          82        86.5         84         86
-## # ... with 1 more variables: Pre.Score3 <dbl>
+##   <chr>        <dbl>       <dbl>       <dbl>      <dbl>      <dbl>
+## 1 greg           83.         85.         89.        79.        78.
+## 2 sally          74.         74.         79.        73.        73.
+## 3 sue            81.         79.         85.        79.        79.
+## # ... with 1 more variable: Pre.Score3 <dbl>
 ```
 
 ### Expanding data to cover all permutations
@@ -1080,20 +1083,20 @@ tail(dat2, n = 12)
 
 ```
 ## # A tibble: 12 x 6
-##    org_code status           org_name  year month   measure
-##       <chr>  <chr>              <chr> <chr> <chr>     <chr>
-##  1       2F     -- St James Infirmary  2016    12 measure_a
-##  2       2F     -- St James Infirmary  2016    12 measure_b
-##  3       2F     -- St James Infirmary  2016    12 measure_c
-##  4       2F     -- St James Infirmary  2017     1 measure_a
-##  5       2F     -- St James Infirmary  2017     1 measure_b
-##  6       2F     -- St James Infirmary  2017     1 measure_c
-##  7       2F     -- St James Infirmary  2017     2 measure_a
-##  8       2F     -- St James Infirmary  2017     2 measure_b
-##  9       2F     -- St James Infirmary  2017     2 measure_c
-## 10       2F     -- St James Infirmary    NA    NA measure_a
-## 11       2F     -- St James Infirmary    NA    NA measure_b
-## 12       2F     -- St James Infirmary    NA    NA measure_c
+##    org_code status org_name           year  month measure  
+##    <chr>    <chr>  <chr>              <chr> <chr> <chr>    
+##  1 2F       --     St James Infirmary 2017  1     measure_a
+##  2 2F       --     St James Infirmary 2017  1     measure_b
+##  3 2F       --     St James Infirmary 2017  1     measure_c
+##  4 2F       --     St James Infirmary 2017  1     <NA>     
+##  5 2F       --     St James Infirmary 2017  2     measure_a
+##  6 2F       --     St James Infirmary 2017  2     measure_b
+##  7 2F       --     St James Infirmary 2017  2     measure_c
+##  8 2F       --     St James Infirmary 2017  2     <NA>     
+##  9 2F       --     St James Infirmary NA    NA    measure_a
+## 10 2F       --     St James Infirmary NA    NA    measure_b
+## 11 2F       --     St James Infirmary NA    NA    measure_c
+## 12 2F       --     St James Infirmary NA    NA    <NA>
 ```
 
 The manual adds a helpfull explanation of the use of `nesting`:

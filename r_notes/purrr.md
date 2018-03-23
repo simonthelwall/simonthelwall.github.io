@@ -1,6 +1,10 @@
 ---
-exclude: true
---- 
+    toc: true
+    toc_float: true
+    exclude: true
+---
+
+
 
 # purrr
 
@@ -12,9 +16,6 @@ If you have any tips on how to tweak my code, please let me know.
 
 The idea is that purrr will iterate a function over a vector.
 This can be used to iterate regression models by subsets of data, or load in data with a common structure. 
-
-* TOC
-{:toc}
 
 ## Read multiple Excel files into memory
 
@@ -95,10 +96,6 @@ library(dplyr)
 ```
 
 ```
-## Warning: package 'dplyr' was built under R version 3.4.2
-```
-
-```
 ## 
 ## Attaching package: 'dplyr'
 ```
@@ -117,13 +114,7 @@ library(dplyr)
 
 ```r
 library(purrr)
-```
 
-```
-## Warning: package 'purrr' was built under R version 3.4.3
-```
-
-```r
 data("mtcars")
 
 mtcars$am <- as.character(mtcars$am)
@@ -152,4 +143,35 @@ for(i in 1:length(mtcars)){
 mtcars <- mtcars %>% 
   map(~mutate(., am = as.integer(am))) %>% 
   bind_rows()
+```
+
+## Exporting data
+
+Say I've loaded some data in and done some manipulations, now I want to export by certain groupings, with one file per group level. 
+Purrr is an obvious candidate to do this and I've pinched the following from [this SO post](https://stackoverflow.com/questions/46620208/write-multiple-csv-files-by-group)
+
+
+```r
+data("mtcars")
+temp_dir <- tempfile()
+dir.create(temp_dir)
+library(tidyr) # for nest function
+
+mtcars <- mtcars %>% 
+  nest(-cyl) 
+head(mtcars)
+```
+
+```
+## # A tibble: 3 x 2
+##     cyl data                  
+##   <dbl> <list>                
+## 1    6. <data.frame [7 x 10]> 
+## 2    4. <data.frame [11 x 10]>
+## 3    8. <data.frame [14 x 10]>
+```
+
+```r
+mtcars %>% 
+  pwalk(function(cyl, data) readr::write_csv(data, path = file.path(temp_dir, paste0(cyl, ".csv"))))
 ```

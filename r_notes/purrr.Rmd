@@ -120,3 +120,22 @@ mtcars <- mtcars %>%
   map(~mutate(., am = as.integer(am))) %>% 
   bind_rows()
 ```
+
+## Exporting data
+
+Say I've loaded some data in and done some manipulations, now I want to export by certain groupings, with one file per group level. 
+Purrr is an obvious candidate to do this and I've pinched the following from [this SO post](https://stackoverflow.com/questions/46620208/write-multiple-csv-files-by-group)
+
+```{r export}
+data("mtcars")
+temp_dir <- tempfile()
+dir.create(temp_dir)
+library(tidyr) # for nest function
+
+mtcars <- mtcars %>% 
+  nest(-cyl) 
+head(mtcars)
+
+mtcars %>% 
+  pwalk(function(cyl, data) readr::write_csv(data, path = file.path(temp_dir, paste0(cyl, ".csv"))))
+```
