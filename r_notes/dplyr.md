@@ -4,7 +4,6 @@
     exclude: true
 ---
 
-This needs a massive clean up. You may wish to disregard the information below. 
   
 # dplyr and tidyr
   
