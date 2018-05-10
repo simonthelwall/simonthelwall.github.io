@@ -13,6 +13,7 @@ The significance of this should not be underestimated.
 It makes the standard data manipulation that all data analysts need to do so much easier. 
 A particularly nice feature is the ability to connect a series of commands in the same way as pipes in Unix systems. 
 Rather than the vertical bar `|`, the symbol is `%>%`.
+The pipe takes input, commonly a dataframe from the left-hand side and passes it to functions on the right-hand side. 
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 Together with ggplot2, lubridate, stringr and others they form the 'tidyverse'.
@@ -26,13 +27,7 @@ dplyr has, as described in the introductory documentation, "five basic data mani
 
 ## Creating new variables
 
-Uses `mutate()`
-
-### Detecting strings
-
-I have a vector in a dataframe and I wish to determine whether I can detect any one of a series of strings. 
-I would normally use str_detect for this, but it doesn't work without a little trickery. 
-The `paste(something, collapse = "|")` is the important bit here. 
+New variables are created using the `mutate()` verb, one takes a dataframe, passes it in a pipe to `mutate` and create a new variable in that function call.
 
 
 ```r
@@ -59,9 +54,38 @@ library(dplyr)
 ```r
 library(stringr)
 library(tidyr)
-test.data <- data.frame(item = c("Apple", "Bear", "Orange", "Pear", "Two Apples"))
+
+data("mtcars")
+
+mtcars <- mtcars %>% 
+  mutate(cyl_2 = cyl + 1, 
+         mpg_2 = mpg * 2)
+
+head(mtcars)
+```
+
+```
+##    mpg cyl disp  hp drat    wt  qsec vs am gear carb cyl_2 mpg_2
+## 1 21.0   6  160 110 3.90 2.620 16.46  0  1    4    4     7  42.0
+## 2 21.0   6  160 110 3.90 2.875 17.02  0  1    4    4     7  42.0
+## 3 22.8   4  108  93 3.85 2.320 18.61  1  1    4    1     5  45.6
+## 4 21.4   6  258 110 3.08 3.215 19.44  1  0    3    1     7  42.8
+## 5 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2     9  37.4
+## 6 18.1   6  225 105 2.76 3.460 20.22  1  0    3    1     7  36.2
+```
+
+### Detecting strings
+
+I have a vector in a dataframe and I wish to determine whether I can detect any one of a series of strings. 
+I would normally use str_detect for this, but it doesn't work without a little trickery. 
+The `paste(something, collapse = "|")` is the important bit here. 
+
+
+```r
+test_data <- data.frame(item = c("Apple", "Bear", "Orange", "Pear", "Two Apples"), 
+                        stringsAsFactors = FALSE)
 fruit <- c("Apple", "Orange", "Pear")
-test.data
+test_data
 ```
 
 ```
@@ -74,9 +98,9 @@ test.data
 ```
 
 ```r
-test.data <- test.data %>%  
+test_data <- test_data %>%  
   mutate(is.fruit = str_detect(item, paste(fruit, collapse = "|")))
-test.data
+test_data
 ```
 
 ```
@@ -108,25 +132,27 @@ mtcars %>%
 ## # A tibble: 6 x 2
 ##     cyl new_cyl
 ##   <dbl>   <dbl>
-## 1    6.     16.
-## 2    6.     16.
-## 3    4.      4.
-## 4    6.     16.
-## 5    8.    200.
-## 6    6.     16.
+## 1     6      16
+## 2     6      16
+## 3     4       4
+## 4     6      16
+## 5     8     200
+## 6     6      16
 ```
 
 `case_when()` vectorises multiple `if()` `else()` statements, and it's a lot neater than writing nested `ifelse()` statements. 
-`case_when()` can be used inside a `mutate()` call, or outside. 
-If inside, then `.$` needs to be used to specify the column upon which tests should be predicated. 
+`case_when()` can be used inside a `mutate()` call, or outside.
+
+There are times when the column needs to be specified with a `.$` in front but the situations in which this is required have changed as the package has developed.
+
 
 
 ```r
 mtcars %>% 
 mutate(
-  new_cyl = case_when(.$cyl == 4 ~ "Four", 
-                      .$cyl == 6 ~ "Six", 
-                      .$cyl == 8 ~ "Eight"
+  new_cyl = case_when(cyl == 4 ~ "Four", 
+                      cyl == 6 ~ "Six", 
+                      cyl == 8 ~ "Eight"
                       )) %>%
   select(cyl, new_cyl) %>% 
   head()
@@ -152,7 +178,7 @@ For numeric columns, it's also worth remembering that integer data types are not
 ```r
 mtcars %>% 
   mutate( cyl2 = case_when(
-    .$cyl == 4 ~ "four"
+    cyl == 4 ~ "four"
   )
   ) %>% 
   select(cyl, cyl2) %>% 
@@ -172,8 +198,8 @@ mtcars %>%
 ```r
 mtcars %>% 
   mutate( cyl2 = case_when(
-    .$cyl == 4 ~ "four", 
-    TRUE ~ as.character(.$cyl)
+    cyl == 4 ~ "four", 
+    TRUE ~ as.character(cyl)
   )
   ) %>% 
   select(cyl, cyl2) %>% 
@@ -196,16 +222,17 @@ I tried `FALSE ~ 0` and that doesn't work.
 
 
 ```r
-library(stringr)
+data(mtcars)
 mtcars$name <- row.names(mtcars)
 names_to_detect <- c("Mazda", "Datsun")
 
 mtcars %>% 
   mutate(has_name = case_when(
-    str_detect(.$name, paste(names_to_detect, collapse = "|")) == TRUE ~ 1, 
+    str_detect(name, paste(names_to_detect, collapse = "|")) == TRUE ~ 1, 
     TRUE ~ 0)
   )%>% 
-  select(name, has_name) %>% head()
+  select(name, has_name) %>% 
+  head()
 ```
 
 ```
@@ -225,6 +252,21 @@ mtcars %>%
 
 
 ```r
+library("lubridate")
+```
+
+```
+## 
+## Attaching package: 'lubridate'
+```
+
+```
+## The following object is masked from 'package:base':
+## 
+##     date
+```
+
+```r
 dat <- data.frame(x = c(1,2,3), 
   y_date = c("01/01/2017", "02/01/2017", "03/01/2017"), stringsAsFactors = FALSE)
 dat <- dat %>% mutate_at(vars(contains("date")), funs(lubridate::dmy))
@@ -238,14 +280,45 @@ dat
 ## 3 3 2017-01-03
 ```
 
-### Passing arguments to `summarise_all`
+summarise_at allows you to specify a set of columns one which to work.
 
-For example, you might want to specify removal of NA values in a sum or mean function. 
-You can do this by
 
 ```r
-data(mtcars)
-summarise_all(mtcars, funs(sum(., na.rm = TRUE)))
+data("mtcars")
+mtcars %>% summarise_at(vars(mpg), funs(sum)) 
+```
+
+```
+##     mpg
+## 1 642.9
+```
+
+```r
+mtcars %>% summarise_at(vars(-mpg, - contains("cyl")), funs(sum))
+```
+
+```
+##     disp   hp   drat      wt   qsec vs am gear carb
+## 1 7383.1 4694 115.09 102.952 571.16 14 13  118   90
+```
+
+```r
+mtcars %>% summarise_at(vars(matches("mpg")), funs(sum))
+```
+
+```
+##     mpg
+## 1 642.9
+```
+
+```r
+my_vars <- c("mpg", "cyl")
+mtcars %>% summarise_at(vars(my_vars), funs(sum))
+```
+
+```
+##     mpg cyl
+## 1 642.9 198
 ```
 
 ## Subsetting (aka filtering)
@@ -257,7 +330,7 @@ filter(test, var1 == "something")
 ```
        
 But getting unique combinations is a little more awkward. 
-One can hijack `n_distinct()` introduced in dplyr to achieve this.
+`group_by()` is covered a little later.
 
 
 ```r
@@ -287,10 +360,10 @@ out
 ## # Groups:   id, org [4]
 ##      id org    test 
 ##   <dbl> <fct>  <fct>
-## 1    1. apple  S    
-## 2    1. bear   S    
-## 3    2. orange R    
-## 4    2. pear   S
+## 1     1 apple  S    
+## 2     1 bear   S    
+## 3     2 orange R    
+## 4     2 pear   S
 ```
 
 ## Summarising data
@@ -329,11 +402,15 @@ table(test$group, test$outcome, dnn = c("Group", "Outcome"))
 
 ```r
 out <-test %>% group_by(group) %>% 
-  summarise(n = n(), successes = sum(outcome), 
-            pc.succ = round(binom.confint(successes, n, methods = "exact")[[4]]*100, 2),
-            pc.lci = round(binom.confint(successes, n, methods = "exact")[[5]]*100, 2),
-            pc.uci = round(binom.confint(successes, n, methods = "exact")[[6]]*100, 2)
+  summarise(n = n(), successes = sum(outcome)) %>% 
+  mutate(pc.succ = round(binom.confint(successes, n, 
+                                       methods = "exact")[[4]]*100, 2),
+         pc.lci = round(binom.confint(successes, n, 
+                                      methods = "exact")[[5]]*100, 2),
+         pc.uci = round(binom.confint(successes, n, 
+                                      methods = "exact")[[6]]*100, 2)
             )
+
 out
 ```
 
@@ -341,8 +418,8 @@ out
 ## # A tibble: 2 x 6
 ##   group     n successes pc.succ pc.lci pc.uci
 ##   <fct> <int>     <dbl>   <dbl>  <dbl>  <dbl>
-## 1 A        10        1.     10.  0.250   44.5
-## 2 B        10        2.     20.  2.52    55.6
+## 1 A        10         1      10   0.25   44.5
+## 2 B        10         2      20   2.52   55.6
 ```
                    
 Outside dplyr I would write `binom.confint(x,n,methods = "exact")$mean`. 
@@ -350,58 +427,49 @@ This doesn't work in dplyr and returns the error `"Error in binom.confint(c(6928
                                                                                                  invalid subscript type 'closure' "`
 However, indexing the columns does work. 
 Also, wrapping the `round()` and `binom.confint()` in a function would improve the readability of the process. 
-                                                                                               
+
+### Passing arguments to `summarise_all`
+
+For example, you might want to specify removal of NA values in a sum or mean function. 
+You can do this by
+
+
+```r
+data(mtcars)
+summarise_all(mtcars, funs(sum(., na.rm = TRUE)))
+```
 ## Grouped operations
 
-There may be a variable name length limit in `group_by()`.
-I believe that this is now fixed. 
-Certainly the below works.
+Grouping performs operations by levels of the grouping variable or variables. 
+For example, I might want to get the mean mpg for each value of cylinder in mtcars:
+
 
 ```r
-test <- data.frame(name = rep(c("orange", "pear", "apple", "bear"), 2) , 
-                   value = rnorm(8), stringsAsFactors = FALSE)
-test %>%
-  group_by(name) %>% summarise(mean(value))
+mtcars %>% group_by(cyl) %>% 
+  mutate(grouped_mpg = mean(mpg)) %>% 
+  select(mpg, cyl, grouped_mpg) %>% 
+  head()
 ```
 
 ```
-## # A tibble: 4 x 2
-##   name   `mean(value)`
-##   <chr>          <dbl>
-## 1 apple          0.783
-## 2 bear          -0.250
-## 3 orange        -0.817
-## 4 pear          -0.738
-```
-
-```r
-                                                                                               test$reallyreallyreallyreallyreallylongvarname <- test$name
-
-test %>% group_by(reallyreallyreallyreallyreallylongvarname) %>% 
-  summarise(mean(value))
-```
-
-```
-## # A tibble: 4 x 2
-##   reallyreallyreallyreallyreallylongvarname `mean(value)`
-##   <chr>                                             <dbl>
-## 1 apple                                             0.783
-## 2 bear                                             -0.250
-## 3 orange                                           -0.817
-## 4 pear                                             -0.738
-```
-
-This can be resolved using `quote()`.
-
-```r
-group_by(test, quote(reallyreallyreallyreallyreallylongvarname)) %>% 
-  summarise(mean(value))
+## # A tibble: 6 x 3
+## # Groups:   cyl [3]
+##     mpg   cyl grouped_mpg
+##   <dbl> <dbl>       <dbl>
+## 1  21       6        19.7
+## 2  21       6        19.7
+## 3  22.8     4        26.7
+## 4  21.4     6        19.7
+## 5  18.7     8        15.1
+## 6  18.1     6        19.7
 ```
 
 ### Adding a group id
+
 Sometimes one might want to create an integer group id. 
 i.e. for all rows with the same groupings, these will have the same id. 
 `group_indices()` goes some of the way to resolve this by creating a vector of integers corresponding to the index numbers of the groups. 
+
 Unfortunately, one can't use `group_indices()` in `mutate()`, it returns an error.
 Therefore, one has to sort the dataframe by the grouping variables before adding in the id. 
 It's important to note that the data **must** be sorted prior to the creation of `i`, otherwise the `mutate(group_id = i)` will be in the wrong sort order.
@@ -410,7 +478,9 @@ It's important to note that the data **must** be sorted prior to the creation of
 ```r
 data(mtcars)
 mtcars <- mtcars %>% group_by(cyl, am) %>% arrange(cyl, am)
+
 i <- mtcars %>% group_indices()
+
 mtcars <- mtcars %>% ungroup() %>% mutate(group_id = i)
 mtcars %>% select(cyl, am, group_id)
 ```
@@ -419,16 +489,16 @@ mtcars %>% select(cyl, am, group_id)
 ## # A tibble: 32 x 3
 ##      cyl    am group_id
 ##    <dbl> <dbl>    <int>
-##  1    4.    0.        1
-##  2    4.    0.        1
-##  3    4.    0.        1
-##  4    4.    1.        2
-##  5    4.    1.        2
-##  6    4.    1.        2
-##  7    4.    1.        2
-##  8    4.    1.        2
-##  9    4.    1.        2
-## 10    4.    1.        2
+##  1     4     0        1
+##  2     4     0        1
+##  3     4     0        1
+##  4     4     1        2
+##  5     4     1        2
+##  6     4     1        2
+##  7     4     1        2
+##  8     4     1        2
+##  9     4     1        2
+## 10     4     1        2
 ## # ... with 22 more rows
 ```
 
@@ -454,7 +524,7 @@ rename(iris, petal_length = Petal.Length) %>% head()
 ## 6          5.4         3.9          1.7         0.4  setosa
 ```
 
-Variables can be dropped using `select(data, -var.name)`. 
+Variables can be dropped using `select(data, -var_name)`. 
 Or, if quicker, retained from a long list of variables, e.g. `select(data, var1, var2)`.
                                                                                                
 
@@ -501,7 +571,8 @@ thanks to: http://stackoverflow.com/questions/25923392/r-dplyr-select-columns-ba
 
 ```r
 #  test windowed functions
-test <- data.frame(cbind(time = c(1:10), value = rep(1, 10)), stringsAsFactors = FALSE)
+test <- data.frame(cbind(time = c(1:10), value = rep(1, 10)), 
+                   stringsAsFactors = FALSE)
 head(test)
 ```
 
@@ -514,7 +585,6 @@ head(test)
 ## 5    5     1
 ## 6    6     1
 ```
-
 
 ```r
 test <- test %>% 
@@ -545,7 +615,7 @@ test
 ## Wrapping dplyr in a function
 
 Programming with dplyr has changed a lot with the release of dplyr 0.7. 
-Previously there was a convoluted process using lazy eval and teh `interp` function. 
+Previously there was a convoluted process using lazy eval and the `interp` function. 
 Now, dplyr incorporates tidyeval and is much simpler. 
 The vignette on [programming with dplyr](https://github.com/simonthelwall/simonthelwall.github.io.git) provides a much longer explanation of how it works.
 
@@ -575,61 +645,6 @@ select_a_column(mtcars, mpg) %>% head()
 ```
 
 Two steps here: `enquo()` to capture the variable of interest and `!!` to use it. 
-### The old method
-What follows is likely to be inaccurate for version 0.7 and later. 
-
-Can be a little tricky and some of the information on the internet seems out of date. However, managed to wrap the following in a function to produce nice univariable tables. It does require a variable called obs though. This should be fixable with a little wrangling. 
-                                                                                               
-
-```r
-niceTable <- function(data = x, ...){
-  # from https://groups.google.com/d/msg/manipulatr/htt0kO9Dhds/O5eVE2cfvsoJ
-  
-  z <- data %>% group_by_(...) %>%
-    summarise(n = sum(obs)) %>% ungroup() %>% 
-    mutate(cum.pc = round((cumsum(n)/sum(n))*100,1), pc = round( (n/sum(n))*100, 2 ))
-  return(z)
-  }
-
-data(mtcars)
-mtcars$obs <- 1
-
-out <- niceTable(mtcars, "vs")
-out
-```
-
-```
-## # A tibble: 2 x 4
-##      vs     n cum.pc    pc
-##   <dbl> <dbl>  <dbl> <dbl>
-## 1    0.   18.   56.2  56.2
-## 2    1.   14.  100.   43.8
-```
-
-Done.^[But `tabyl()` in janitor makes this nicer]
-Or so I thought. To go much further with this is actually quite difficult. 
-Let's try without wrapping in a function:
-
-
-```r
-require(dplyr)
-mtcars <- mtcars
-mtcars %>% group_by(cyl) %>% summarise(n = n(), am = sum(am)) %>%
-  mutate(pc.am = round((am/n)*100, 2))
-```
-
-```
-## # A tibble: 3 x 4
-##     cyl     n    am pc.am
-##   <dbl> <int> <dbl> <dbl>
-## 1    4.    11    8.  72.7
-## 2    6.     7    3.  42.9
-## 3    8.    14    2.  14.3
-```
-
-Then, to get this in a function, one needs to supply more than one variable to the data. 
-
-This turns out to be rather tricky. 
 
 One has to interpret the multiple variables supplied, otherwise you get all sorts of errors. 
 
@@ -652,9 +667,9 @@ tabFun(mtcars, cyl, am)
 ## # A tibble: 3 x 4
 ##     cyl     n sum_z    pc
 ##   <dbl> <int> <dbl> <dbl>
-## 1    4.    11    8.  72.7
-## 2    6.     7    3.  42.9
-## 3    8.    14    2.  14.3
+## 1     4    11     8  72.7
+## 2     6     7     3  42.9
+## 3     8    14     2  14.3
 ```
 Phew. 
 
@@ -663,12 +678,6 @@ Oh, and incidentally, trying to simplify this with n = n() returns the error `Er
 I don't know why. 
 
 ### Mutate in a function
-This is an example from when dplyr used lazyeval for function writing. 
-I'm keeping it here for reference.
-
-I tinkered around with `quote()` and `substitute()` for a bit. 
-I don't understand why a simple `mutate_()` doesn't work. 
-I don't really see the need for `[]` indexing, but the following allows you to avoid quotes in the call. 
 
 
 ```r
@@ -686,6 +695,7 @@ age_fun <- function(dat, dob_var, sampledate_var) {
   return(out)
 }
 
+# doesn't work
 age_fun2 <- function(dat, dob_var, sampledate_var) {
   # var1 <- enquo(dob_var)
   # var2 <- enquo(sampledate_var)
@@ -699,8 +709,6 @@ age_fun2 <- function(dat, dob_var, sampledate_var) {
 temp_dat <- age_fun(dat = temp_dat, dob_var = dob, sampledate_var = sampledate)
 temp_dat <- age_fun2(dat = temp_dat, dob_var = dob, sampledate_var = sampledate)
 temp_dat
-# Old version referenced from here. 
-# from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-within-function
 ```
 
 ## Joining
@@ -711,7 +719,7 @@ Very similar to plyr, but the function name specifies the type of join rather th
 ```r
                                                                                  data3 <- left_join(data1, data2, by = "common.var")
 ```
-                                                                                 See SQL Venn for reminders. 
+                                                                                 See [SQL Venn](https://blog.codinghorror.com/a-visual-explanation-of-sql-joins/) for reminders. 
 
 Usefully, one can join by more than one variable. 
 This is useful when a single variable does not provide a unique identifier. 
@@ -842,7 +850,7 @@ test %>% group_by(organism.species.name, abx) %>%
 ##   organism.specie~ abx   n_sus_start n_res_start n_sus_end n_res_end p.val
 ##   <chr>            <chr>       <int>       <int>     <int>     <int> <dbl>
 ## 1 ec               ceph            5          10        10         5 0.144
-## 2 ec               carb            5           5         5         5 1.00 
+## 2 ec               carb            5           5         5         5 1    
 ## 3 kp               ceph           10           5         5        10 0.144
 ```
     
@@ -863,16 +871,16 @@ stocks <-
 
 ```
 ##          time           X          Y          Z
-## 1  2009-01-01 -0.96490628 -2.2865629  1.1583356
-## 2  2009-01-02  0.23771626  1.8636931 -1.2059783
-## 3  2009-01-03  1.85157623 -1.2561003 -2.4085726
-## 4  2009-01-04  2.46603081 -0.9873659 -0.3392859
-## 5  2009-01-05  0.07160344 -0.2059175 -1.6300527
-## 6  2009-01-06  1.35603402 -2.3155248 -6.7875525
-## 7  2009-01-07 -1.29518644  3.0519898 -5.2501476
-## 8  2009-01-08  0.69401304 -1.3941199 -5.4138858
-## 9  2009-01-09  0.41702352  1.8643268 -2.6931053
-## 10 2009-01-10  0.69930977 -0.4339952  0.1817706
+## 1  2009-01-01 -0.04585453 -1.4495466  0.2587919
+## 2  2009-01-02  0.22757262  0.4319155 -1.5743721
+## 3  2009-01-03 -0.39376239 -0.8340409 -2.8023892
+## 4  2009-01-04 -2.00358729  5.1717332 -4.2780069
+## 5  2009-01-05  2.62465922 -3.0533851 -1.0727224
+## 6  2009-01-06 -0.96244722 -0.3959880 -3.5751754
+## 7  2009-01-07  0.15607861  4.5448018 -3.0587058
+## 8  2009-01-08  1.17352798 -0.6613273  1.0263555
+## 9  2009-01-09 -0.96637365  1.0986367  3.1425586
+## 10 2009-01-10  0.90033313  3.5056913  5.4665945
 ```
 
 ```r
@@ -881,36 +889,36 @@ stocks <-
 
 ```
 ##          time stock       price
-## 1  2009-01-01     X -0.96490628
-## 2  2009-01-02     X  0.23771626
-## 3  2009-01-03     X  1.85157623
-## 4  2009-01-04     X  2.46603081
-## 5  2009-01-05     X  0.07160344
-## 6  2009-01-06     X  1.35603402
-## 7  2009-01-07     X -1.29518644
-## 8  2009-01-08     X  0.69401304
-## 9  2009-01-09     X  0.41702352
-## 10 2009-01-10     X  0.69930977
-## 11 2009-01-01     Y -2.28656294
-## 12 2009-01-02     Y  1.86369308
-## 13 2009-01-03     Y -1.25610032
-## 14 2009-01-04     Y -0.98736586
-## 15 2009-01-05     Y -0.20591753
-## 16 2009-01-06     Y -2.31552481
-## 17 2009-01-07     Y  3.05198983
-## 18 2009-01-08     Y -1.39411992
-## 19 2009-01-09     Y  1.86432684
-## 20 2009-01-10     Y -0.43399515
-## 21 2009-01-01     Z  1.15833562
-## 22 2009-01-02     Z -1.20597831
-## 23 2009-01-03     Z -2.40857263
-## 24 2009-01-04     Z -0.33928594
-## 25 2009-01-05     Z -1.63005272
-## 26 2009-01-06     Z -6.78755252
-## 27 2009-01-07     Z -5.25014763
-## 28 2009-01-08     Z -5.41388583
-## 29 2009-01-09     Z -2.69310527
-## 30 2009-01-10     Z  0.18177060
+## 1  2009-01-01     X -0.04585453
+## 2  2009-01-02     X  0.22757262
+## 3  2009-01-03     X -0.39376239
+## 4  2009-01-04     X -2.00358729
+## 5  2009-01-05     X  2.62465922
+## 6  2009-01-06     X -0.96244722
+## 7  2009-01-07     X  0.15607861
+## 8  2009-01-08     X  1.17352798
+## 9  2009-01-09     X -0.96637365
+## 10 2009-01-10     X  0.90033313
+## 11 2009-01-01     Y -1.44954657
+## 12 2009-01-02     Y  0.43191551
+## 13 2009-01-03     Y -0.83404093
+## 14 2009-01-04     Y  5.17173319
+## 15 2009-01-05     Y -3.05338512
+## 16 2009-01-06     Y -0.39598803
+## 17 2009-01-07     Y  4.54480178
+## 18 2009-01-08     Y -0.66132732
+## 19 2009-01-09     Y  1.09863666
+## 20 2009-01-10     Y  3.50569129
+## 21 2009-01-01     Z  0.25879187
+## 22 2009-01-02     Z -1.57437215
+## 23 2009-01-03     Z -2.80238921
+## 24 2009-01-04     Z -4.27800687
+## 25 2009-01-05     Z -1.07272236
+## 26 2009-01-06     Z -3.57517542
+## 27 2009-01-07     Z -3.05870585
+## 28 2009-01-08     Z  1.02635549
+## 29 2009-01-09     Z  3.14255858
+## 30 2009-01-10     Z  5.46659454
 ```
 
 ### long to wide
@@ -981,29 +989,29 @@ head(dat)
 ## # A tibble: 6 x 5
 ##   Person Time  Score1 Score2 Score3
 ##   <chr>  <chr>  <dbl>  <dbl>  <dbl>
-## 1 greg   Pre      79.    78.   83.5
-## 2 greg   Post     83.    85.   89.0
-## 3 sally  Pre      73.    73.   78.0
-## 4 sally  Post     74.    74.   79.0
-## 5 sue    Pre      79.    79.   84.0
-## 6 sue    Post     81.    79.   85.0
+## 1 greg   Pre       85     83   89  
+## 2 greg   Post      91     88   94.5
+## 3 sally  Pre       84     84   89  
+## 4 sally  Post      81     84   87.5
+## 5 sue    Pre       82     83   87.5
+## 6 sue    Post      80     79   84.5
 ```
 
 ```r
 dat %>%
   gather(temp, score, starts_with("Score")) %>%
-  unite(temp1, Time, temp, sep = ".") %>%
+  unite(temp1, Time, temp, sep = "_") %>%
   spread(temp1, score)
 ```
 
 ```
 ## # A tibble: 3 x 7
-##   Person Post.Score1 Post.Score2 Post.Score3 Pre.Score1 Pre.Score2
+##   Person Post_Score1 Post_Score2 Post_Score3 Pre_Score1 Pre_Score2
 ##   <chr>        <dbl>       <dbl>       <dbl>      <dbl>      <dbl>
-## 1 greg           83.         85.         89.        79.        78.
-## 2 sally          74.         74.         79.        73.        73.
-## 3 sue            81.         79.         85.        79.        79.
-## # ... with 1 more variable: Pre.Score3 <dbl>
+## 1 greg            91          88        94.5         85         83
+## 2 sally           81          84        87.5         84         84
+## 3 sue             80          79        84.5         82         83
+## # ... with 1 more variable: Pre_Score3 <dbl>
 ```
 
 ### Expanding data to cover all permutations
@@ -1102,3 +1110,26 @@ tail(dat2, n = 12)
 The manual adds a helpfull explanation of the use of `nesting`:
 
 > "To find all unique combinations of x, y and z, including those not found in the data, supply each variable as a separate argument. To find only the combinations that occur in the data, use nest: expand(df, nesting(x, y, z))."
+
+Crossing is the tidy equivalent of expand.grid and doesn't convert strings to factors.
+
+
+```r
+crossing(year = c(2016, 2017, 2018), 
+         month = c("January", "February", "March"))
+```
+
+```
+## # A tibble: 9 x 2
+##    year month   
+##   <dbl> <chr>   
+## 1  2016 February
+## 2  2016 January 
+## 3  2016 March   
+## 4  2017 February
+## 5  2017 January 
+## 6  2017 March   
+## 7  2018 February
+## 8  2018 January 
+## 9  2018 March
+```

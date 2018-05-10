@@ -16,6 +16,7 @@ The significance of this should not be underestimated.
 It makes the standard data manipulation that all data analysts need to do so much easier. 
 A particularly nice feature is the ability to connect a series of commands in the same way as pipes in Unix systems. 
 Rather than the vertical bar `|`, the symbol is `%>%`.
+The pipe takes input, commonly a dataframe from the left-hand side and passes it to functions on the right-hand side. 
 
 As well as dplyr, Hadley has introduced another new package for reshaping: tidyr. 
 Together with ggplot2, lubridate, stringr and others they form the 'tidyverse'.
@@ -29,7 +30,21 @@ dplyr has, as described in the introductory documentation, "five basic data mani
 
 ## Creating new variables
 
-Uses `mutate()`
+New variables are created using the `mutate()` verb, one takes a dataframe, passes it in a pipe to `mutate` and create a new variable in that function call.
+
+```{r mutate}
+library(dplyr)
+library(stringr)
+library(tidyr)
+
+data("mtcars")
+
+mtcars <- mtcars %>% 
+  mutate(cyl_2 = cyl + 1, 
+         mpg_2 = mpg * 2)
+
+head(mtcars)
+```
 
 ### Detecting strings
 
@@ -38,16 +53,14 @@ I would normally use str_detect for this, but it doesn't work without a little t
 The `paste(something, collapse = "|")` is the important bit here. 
 
 ```{r}
-library(dplyr)
-library(stringr)
-library(tidyr)
-test.data <- data.frame(item = c("Apple", "Bear", "Orange", "Pear", "Two Apples"))
+test_data <- data.frame(item = c("Apple", "Bear", "Orange", "Pear", "Two Apples"), 
+                        stringsAsFactors = FALSE)
 fruit <- c("Apple", "Orange", "Pear")
-test.data
+test_data
 
-test.data <- test.data %>%  
+test_data <- test_data %>%  
   mutate(is.fruit = str_detect(item, paste(fruit, collapse = "|")))
-test.data
+test_data
 ```
 
 ### Replacing values with dplyr functions
@@ -66,15 +79,18 @@ mtcars %>%
 ```
 
 `case_when()` vectorises multiple `if()` `else()` statements, and it's a lot neater than writing nested `ifelse()` statements. 
-`case_when()` can be used inside a `mutate()` call, or outside. 
-If inside, then `.$` needs to be used to specify the column upon which tests should be predicated. 
+`case_when()` can be used inside a `mutate()` call, or outside.
+
+There are times when the column needs to be specified with a `.$` in front but the situations in which this is required have changed as the package has developed.
+
 
 ```{r}
+
 mtcars %>% 
 mutate(
-  new_cyl = case_when(.$cyl == 4 ~ "Four", 
-                      .$cyl == 6 ~ "Six", 
-                      .$cyl == 8 ~ "Eight"
+  new_cyl = case_when(cyl == 4 ~ "Four", 
+                      cyl == 6 ~ "Six", 
+                      cyl == 8 ~ "Eight"
                       )) %>%
   select(cyl, new_cyl) %>% 
   head()
@@ -89,7 +105,7 @@ For numeric columns, it's also worth remembering that integer data types are not
 ```{r}
 mtcars %>% 
   mutate( cyl2 = case_when(
-    .$cyl == 4 ~ "four"
+    cyl == 4 ~ "four"
   )
   ) %>% 
   select(cyl, cyl2) %>% 
@@ -97,8 +113,8 @@ mtcars %>%
 
 mtcars %>% 
   mutate( cyl2 = case_when(
-    .$cyl == 4 ~ "four", 
-    TRUE ~ as.character(.$cyl)
+    cyl == 4 ~ "four", 
+    TRUE ~ as.character(cyl)
   )
   ) %>% 
   select(cyl, cyl2) %>% 
@@ -110,16 +126,17 @@ It's a bit weird giving the `TRUE ~ 0` for the non-true cases.
 I tried `FALSE ~ 0` and that doesn't work. 
 
 ```{r}
-library(stringr)
+data(mtcars)
 mtcars$name <- row.names(mtcars)
 names_to_detect <- c("Mazda", "Datsun")
 
 mtcars %>% 
   mutate(has_name = case_when(
-    str_detect(.$name, paste(names_to_detect, collapse = "|")) == TRUE ~ 1, 
+    str_detect(name, paste(names_to_detect, collapse = "|")) == TRUE ~ 1, 
     TRUE ~ 0)
   )%>% 
-  select(name, has_name) %>% head()
+  select(name, has_name) %>% 
+  head()
 
 ```
 
@@ -129,19 +146,24 @@ mtcars %>%
 `mutate_at` will mutate only the specified columns
 
 ```{r}
+library("lubridate")
 dat <- data.frame(x = c(1,2,3), 
   y_date = c("01/01/2017", "02/01/2017", "03/01/2017"), stringsAsFactors = FALSE)
 dat <- dat %>% mutate_at(vars(contains("date")), funs(lubridate::dmy))
 dat
 ```
 
-### Passing arguments to `summarise_all`
+summarise_at allows you to specify a set of columns one which to work.
 
-For example, you might want to specify removal of NA values in a sum or mean function. 
-You can do this by
-```{r, eval = FALSE}
-data(mtcars)
-summarise_all(mtcars, funs(sum(., na.rm = TRUE)))
+```{r summarist-at}
+data("mtcars")
+mtcars %>% summarise_at(vars(mpg), funs(sum)) 
+
+mtcars %>% summarise_at(vars(-mpg, - contains("cyl")), funs(sum))
+mtcars %>% summarise_at(vars(matches("mpg")), funs(sum))
+
+my_vars <- c("mpg", "cyl")
+mtcars %>% summarise_at(vars(my_vars), funs(sum))
 ```
 
 ## Subsetting (aka filtering)
@@ -152,7 +174,7 @@ filter(test, var1 == "something")
 ```
        
 But getting unique combinations is a little more awkward. 
-One can hijack `n_distinct()` introduced in dplyr to achieve this.
+`group_by()` is covered a little later.
 
 ```{r}
 test <- data.frame(id = c(1,1,1,2,2),
@@ -179,11 +201,15 @@ head(test)
 table(test$group, test$outcome, dnn = c("Group", "Outcome"))
 
 out <-test %>% group_by(group) %>% 
-  summarise(n = n(), successes = sum(outcome), 
-            pc.succ = round(binom.confint(successes, n, methods = "exact")[[4]]*100, 2),
-            pc.lci = round(binom.confint(successes, n, methods = "exact")[[5]]*100, 2),
-            pc.uci = round(binom.confint(successes, n, methods = "exact")[[6]]*100, 2)
+  summarise(n = n(), successes = sum(outcome)) %>% 
+  mutate(pc.succ = round(binom.confint(successes, n, 
+                                       methods = "exact")[[4]]*100, 2),
+         pc.lci = round(binom.confint(successes, n, 
+                                      methods = "exact")[[5]]*100, 2),
+         pc.uci = round(binom.confint(successes, n, 
+                                      methods = "exact")[[6]]*100, 2)
             )
+
 out
 ```
                    
@@ -192,33 +218,34 @@ This doesn't work in dplyr and returns the error `"Error in binom.confint(c(6928
                                                                                                  invalid subscript type 'closure' "`
 However, indexing the columns does work. 
 Also, wrapping the `round()` and `binom.confint()` in a function would improve the readability of the process. 
-                                                                                               
+
+### Passing arguments to `summarise_all`
+
+For example, you might want to specify removal of NA values in a sum or mean function. 
+You can do this by
+
+```{r, eval = FALSE}
+data(mtcars)
+summarise_all(mtcars, funs(sum(., na.rm = TRUE)))
+```                                                                                               
 ## Grouped operations
 
-There may be a variable name length limit in `group_by()`.
-I believe that this is now fixed. 
-Certainly the below works.
-```{r} 
-test <- data.frame(name = rep(c("orange", "pear", "apple", "bear"), 2) , 
-                   value = rnorm(8), stringsAsFactors = FALSE)
-test %>%
-  group_by(name) %>% summarise(mean(value))
-                                                                                               test$reallyreallyreallyreallyreallylongvarname <- test$name
+Grouping performs operations by levels of the grouping variable or variables. 
+For example, I might want to get the mean mpg for each value of cylinder in mtcars:
 
-test %>% group_by(reallyreallyreallyreallyreallylongvarname) %>% 
-  summarise(mean(value))
-```
-
-This can be resolved using `quote()`.
-```{r, eval = FALSE}
-group_by(test, quote(reallyreallyreallyreallyreallylongvarname)) %>% 
-  summarise(mean(value))
+```{r grouped}
+mtcars %>% group_by(cyl) %>% 
+  mutate(grouped_mpg = mean(mpg)) %>% 
+  select(mpg, cyl, grouped_mpg) %>% 
+  head()
 ```
 
 ### Adding a group id
+
 Sometimes one might want to create an integer group id. 
 i.e. for all rows with the same groupings, these will have the same id. 
 `group_indices()` goes some of the way to resolve this by creating a vector of integers corresponding to the index numbers of the groups. 
+
 Unfortunately, one can't use `group_indices()` in `mutate()`, it returns an error.
 Therefore, one has to sort the dataframe by the grouping variables before adding in the id. 
 It's important to note that the data **must** be sorted prior to the creation of `i`, otherwise the `mutate(group_id = i)` will be in the wrong sort order.
@@ -227,9 +254,12 @@ It's important to note that the data **must** be sorted prior to the creation of
 
 data(mtcars)
 mtcars <- mtcars %>% group_by(cyl, am) %>% arrange(cyl, am)
+
 i <- mtcars %>% group_indices()
+
 mtcars <- mtcars %>% ungroup() %>% mutate(group_id = i)
 mtcars %>% select(cyl, am, group_id)
+
 ```
 
 ## Dropping and renaming variables
@@ -243,7 +273,7 @@ e.g.
 rename(iris, petal_length = Petal.Length) %>% head()
 ```
 
-Variables can be dropped using `select(data, -var.name)`. 
+Variables can be dropped using `select(data, -var_name)`. 
 Or, if quicker, retained from a long list of variables, e.g. `select(data, var1, var2)`.
                                                                                                
 ```{r}
@@ -266,11 +296,11 @@ thanks to: http://stackoverflow.com/questions/25923392/r-dplyr-select-columns-ba
 ## Lagged values and windows
 ```{r}
 #  test windowed functions
-test <- data.frame(cbind(time = c(1:10), value = rep(1, 10)), stringsAsFactors = FALSE)
+test <- data.frame(cbind(time = c(1:10), value = rep(1, 10)), 
+                   stringsAsFactors = FALSE)
 head(test)
-```
 
-```{r}
+
 test <- test %>% 
   mutate( lag1 = lag(value),
           lag2 = lag(value, 2),
@@ -285,7 +315,7 @@ test
 ## Wrapping dplyr in a function
 
 Programming with dplyr has changed a lot with the release of dplyr 0.7. 
-Previously there was a convoluted process using lazy eval and teh `interp` function. 
+Previously there was a convoluted process using lazy eval and the `interp` function. 
 Now, dplyr incorporates tidyeval and is much simpler. 
 The vignette on [programming with dplyr](https://github.com/simonthelwall/simonthelwall.github.io.git) provides a much longer explanation of how it works.
 
@@ -304,43 +334,6 @@ select_a_column(mtcars, mpg) %>% head()
 ```
 
 Two steps here: `enquo()` to capture the variable of interest and `!!` to use it. 
-### The old method
-What follows is likely to be inaccurate for version 0.7 and later. 
-
-Can be a little tricky and some of the information on the internet seems out of date. However, managed to wrap the following in a function to produce nice univariable tables. It does require a variable called obs though. This should be fixable with a little wrangling. 
-                                                                                               
-```{r}
-
-niceTable <- function(data = x, ...){
-  # from https://groups.google.com/d/msg/manipulatr/htt0kO9Dhds/O5eVE2cfvsoJ
-  
-  z <- data %>% group_by_(...) %>%
-    summarise(n = sum(obs)) %>% ungroup() %>% 
-    mutate(cum.pc = round((cumsum(n)/sum(n))*100,1), pc = round( (n/sum(n))*100, 2 ))
-  return(z)
-  }
-
-data(mtcars)
-mtcars$obs <- 1
-
-out <- niceTable(mtcars, "vs")
-out
-```
-
-Done.^[But `tabyl()` in janitor makes this nicer]
-Or so I thought. To go much further with this is actually quite difficult. 
-Let's try without wrapping in a function:
-
-```{r}
-require(dplyr)
-mtcars <- mtcars
-mtcars %>% group_by(cyl) %>% summarise(n = n(), am = sum(am)) %>%
-  mutate(pc.am = round((am/n)*100, 2))
-```
-
-Then, to get this in a function, one needs to supply more than one variable to the data. 
-
-This turns out to be rather tricky. 
 
 One has to interpret the multiple variables supplied, otherwise you get all sorts of errors. 
 ```{r}
@@ -365,12 +358,6 @@ Oh, and incidentally, trying to simplify this with n = n() returns the error `Er
 I don't know why. 
 
 ### Mutate in a function
-This is an example from when dplyr used lazyeval for function writing. 
-I'm keeping it here for reference.
-
-I tinkered around with `quote()` and `substitute()` for a bit. 
-I don't understand why a simple `mutate_()` doesn't work. 
-I don't really see the need for `[]` indexing, but the following allows you to avoid quotes in the call. 
 
 ```{r, eval=FALSE}
 
@@ -388,6 +375,7 @@ age_fun <- function(dat, dob_var, sampledate_var) {
   return(out)
 }
 
+# doesn't work
 age_fun2 <- function(dat, dob_var, sampledate_var) {
   # var1 <- enquo(dob_var)
   # var2 <- enquo(sampledate_var)
@@ -401,8 +389,7 @@ age_fun2 <- function(dat, dob_var, sampledate_var) {
 temp_dat <- age_fun(dat = temp_dat, dob_var = dob, sampledate_var = sampledate)
 temp_dat <- age_fun2(dat = temp_dat, dob_var = dob, sampledate_var = sampledate)
 temp_dat
-# Old version referenced from here. 
-# from http://stackoverflow.com/questions/24606282/passing-data-frame-to-mutate-within-function
+
 ```
 
 ## Joining
@@ -413,7 +400,7 @@ Very similar to plyr, but the function name specifies the type of join rather th
                                                                                  data3 <- left_join(data1, data2, by = "common.var")
 
 ```
-                                                                                 See SQL Venn for reminders. 
+                                                                                 See [SQL Venn](https://blog.codinghorror.com/a-visual-explanation-of-sql-joins/) for reminders. 
 
 Usefully, one can join by more than one variable. 
 This is useful when a single variable does not provide a unique identifier. 
@@ -533,7 +520,7 @@ head(dat)
   
 dat %>%
   gather(temp, score, starts_with("Score")) %>%
-  unite(temp1, Time, temp, sep = ".") %>%
+  unite(temp1, Time, temp, sep = "_") %>%
   spread(temp1, score)
 ```
 
@@ -596,3 +583,10 @@ tail(dat2, n = 12)
 The manual adds a helpfull explanation of the use of `nesting`:
 
 > "To find all unique combinations of x, y and z, including those not found in the data, supply each variable as a separate argument. To find only the combinations that occur in the data, use nest: expand(df, nesting(x, y, z))."
+
+Crossing is the tidy equivalent of expand.grid and doesn't convert strings to factors.
+
+```{r crossing}
+crossing(year = c(2016, 2017, 2018), 
+         month = c("January", "February", "March"))
+```
