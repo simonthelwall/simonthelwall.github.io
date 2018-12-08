@@ -1,0 +1,183 @@
+---
+output: 
+  html_document:
+    keep_md: true
+    exclude: true
+---
+
+# Statistics
+
+```{r, setup, echo = TRUE}
+library(ggplot2)
+# library(GGally)
+data("mtcars")
+# ggpairs(data = mtcars)
+
+```
+
+## Simple stats
+
+### Percentiles
+
+```{r}
+data(mtcars)
+quantile(mtcars$mpg, c(0.25, 0.5, 0.75), na.rm = TRUE)
+```
+
+### Chi-sq test
+
+Make a contingency table and nest inside `chisq.test()`
+
+```{r}
+data(infert) # built in fertility data
+head(infert)
+```
+
+```{r}
+chisq.test(table(infert$education, infert$case))
+```
+
+The Chi square test results in a warning message because the cell case-0-5yrs is &lt; 5. Best to check with Fisher's exact test:
+
+```{r}
+fisher.test(table(infert$education, infert$case))
+```
+
+It's possible to get the observed and expected cell counts from the output of a `chisq.test()`:
+
+```{r}
+chisq.test(table(infert$education, infert$case))$expected
+```
+
+
+## Mantel-Haenzsel
+
+It pains me to say it, but I don't think the output from R for MH analysis is as neat as that from Stata. 
+The package epicalc had a reasonable function, `mhor()`, but has been removed from CRAN.
+
+Base-r has `mantelhaen.test()` which
+
+> Performs a Cochran-Mantel-Haenszel chi-squared test of the null that two nominal variables are conditionally independent in each stratum, assuming that there is no three-way interaction.
+
+However,
+
+> Currently, no inference on homogeneity of the odds ratios is performed.
+
+i.e. there one can't use `mantelhaen.test()` to identify interaction, and the p-values obtained refer to the pooled odds ratio not being equal to one.
+
+```{r, eval=FALSE}
+library(epicalc)
+data(Oswego)
+mhor(Oswego$ill, Oswego$chocolate, Oswego$sex)
+```
+
+would return
+
+```
+    Stratified analysis by  Var3 
+                    OR lower lim. upper lim. P value
+    Var3 F       0.417     0.0617       2.06  0.3137
+    Var3 M       0.331     0.0512       1.83  0.2635
+    M-H combined 0.364     0.1258       1.05  0.0611
+
+    M-H Chi2(1) = 3.51 , P value = 0.061 
+    Homogeneity test, chi-squared 1 d.f. = 0.05 , P value = 0.827 
+```
+
+## Linear regression
+
+```{r}
+m1 <- lm(mpg ~ wt, data = mtcars)
+
+# Multiple, with ordered categorical varliable
+m2 <- lm(mpg ~ wt + factor(cyl), data = mtcars)
+
+# check the results
+summary(m1)
+```
+
+```{r}
+# and get confidence intervals
+confint(m1)
+```
+
+The summary provide R2 which gives coefficient of determination, the amount of variance in data explained by regressors. Adjusted R2, adjusts this for number of predictor variables included in model. It should be on the scale 0 to 1. However, plot of fitted values (x axis) against residuals more useful (y axis).
+
+### Departures from linearity
+
+```{r}
+library(ggplot2)
+test.data <- data.frame(x = seq(1,100,1), y = seq(1,100,1))
+test.data$z <- test.data$x^2
+
+qplot(x=x, y=y, data = test.data)
+```
+
+
+
+## Polynomial regression
+
+```{r polynomial}
+# linear first
+m1 <- lm(wt ~ disp, data = mtcars)
+m2 <- lm(wt ~ poly(disp, 2), data = mtcars)
+m3 <- lm(wt ~ poly(disp, 3), data = mtcars)
+anova(m1, m2)
+anova(m2, m3)
+anova(m1, m3)
+
+p <- ggplot(data = mtcars, aes(x = disp, y = wt)) + 
+  geom_smooth(method = "lm", formula = y ~ poly(x, 3)) + 
+  geom_point()
+p
+```
+
+## Quantile regression
+
+## Ordinal regression
+
+```{r ordinal}
+# install.packages("ordinal")
+library(ordinal)
+data(wine)
+head(wine)
+
+m1 <- clm(rating ~ temp, data = wine)
+m2 <- clm(rating ~ temp + contact, data = wine)
+
+anova(m1, m2)
+```
+
+The anova above tests the null hypothesis that there is no difference in fit between the two models above. 
+There is strong evidence against the null hypothesis and so it should be rejected. 
+
+The summary gives the un-exponentiated coefficients for the two variables. 
+
+```{r clm-summary}
+summary(m2)
+```
+
+I think verbalising the interpretation of the summary output is not easy. 
+Here's my understanding. 
+A wine at baseline will have intercept odds of a rating. 
+A wine that is warm will have an odds of a 
+So, the odds of a wine being at the next level up (out of a 1-5 rating) increases by exp(2.5) [`r exp(coef(m2)[5])`] for warm wines compared to cold. 
+
+## Poisson regression
+
+Poisson regression can be used to calculate incident rate ratios using either grouped data. 
+This is an example from Kirkwood and Sterne Medical Statistics (2nd Ed), p 241. 
+It compares numbers of infections among children in either good or poor quality housing. 
+The manual calculations given in Kirkwood and Sterne give a rate ratio of 2.01 (95%CI 1.19-3.39)
+
+```{r poisson-setup}
+lrti <- data.frame(housing = c("poor", "good"), n_lrti = c(33, 24), pyar = c(355, 518), 
+                   stringsAsFactors = FALSE)
+lrti
+```
+
+```{r poisson-regression}
+library(broom)
+m1 <- glm(n_lrti ~ housing + offset(log(pyar)), family = "poisson", data = lrti)
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```

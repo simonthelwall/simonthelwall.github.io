@@ -1,95 +1,115 @@
 ---
-exclude: true
+    exclude: true
 ---
 
-# Statistics
 
 * TOC
 {:toc}
+
+# Statistics
+
+
+```r
+library(ggplot2)
+# library(GGally)
+data("mtcars")
+# ggpairs(data = mtcars)
+```
 
 ## Simple stats
 
 ### Percentiles
 
-``` r
+
+```r
 data(mtcars)
 quantile(mtcars$mpg, c(0.25, 0.5, 0.75), na.rm = TRUE)
 ```
 
-    ##    25%    50%    75% 
-    ## 15.425 19.200 22.800
+```
+##    25%    50%    75% 
+## 15.425 19.200 22.800
+```
 
 ### Chi-sq test
 
 Make a contingency table and nest inside `chisq.test()`
 
-``` r
+
+```r
 data(infert) # built in fertility data
 head(infert)
 ```
 
-    ##   education age parity induced case spontaneous stratum pooled.stratum
-    ## 1    0-5yrs  26      6       1    1           2       1              3
-    ## 2    0-5yrs  42      1       1    1           0       2              1
-    ## 3    0-5yrs  39      6       2    1           0       3              4
-    ## 4    0-5yrs  34      4       2    1           0       4              2
-    ## 5   6-11yrs  35      3       1    1           1       5             32
-    ## 6   6-11yrs  36      4       2    1           1       6             36
-
-``` r
-table(infert$education, infert$case)#
+```
+##   education age parity induced case spontaneous stratum pooled.stratum
+## 1    0-5yrs  26      6       1    1           2       1              3
+## 2    0-5yrs  42      1       1    1           0       2              1
+## 3    0-5yrs  39      6       2    1           0       3              4
+## 4    0-5yrs  34      4       2    1           0       4              2
+## 5   6-11yrs  35      3       1    1           1       5             32
+## 6   6-11yrs  36      4       2    1           1       6             36
 ```
 
-    ##          
-    ##            0  1
-    ##   0-5yrs   8  4
-    ##   6-11yrs 80 40
-    ##   12+ yrs 77 39
 
-``` r
+```r
 chisq.test(table(infert$education, infert$case))
 ```
 
-    ## Warning in chisq.test(table(infert$education, infert$case)): Chi-squared
-    ## approximation may be incorrect
+```
+## Warning in chisq.test(table(infert$education, infert$case)): Chi-squared
+## approximation may be incorrect
+```
 
-    ## 
-    ##  Pearson's Chi-squared test
-    ## 
-    ## data:  table(infert$education, infert$case)
-    ## X-squared = 0.0022896, df = 2, p-value = 0.9989
+```
+## 
+## 	Pearson's Chi-squared test
+## 
+## data:  table(infert$education, infert$case)
+## X-squared = 0.0022896, df = 2, p-value = 0.9989
+```
 
 The Chi square test results in a warning message because the cell case-0-5yrs is &lt; 5. Best to check with Fisher's exact test:
 
-``` r
+
+```r
 fisher.test(table(infert$education, infert$case))
 ```
 
-    ## 
-    ##  Fisher's Exact Test for Count Data
-    ## 
-    ## data:  table(infert$education, infert$case)
-    ## p-value = 1
-    ## alternative hypothesis: two.sided
+```
+## 
+## 	Fisher's Exact Test for Count Data
+## 
+## data:  table(infert$education, infert$case)
+## p-value = 1
+## alternative hypothesis: two.sided
+```
 
 It's possible to get the observed and expected cell counts from the output of a `chisq.test()`:
 
-``` r
+
+```r
 chisq.test(table(infert$education, infert$case))$expected
 ```
 
-    ## Warning in chisq.test(table(infert$education, infert$case)): Chi-squared
-    ## approximation may be incorrect
+```
+## Warning in chisq.test(table(infert$education, infert$case)): Chi-squared
+## approximation may be incorrect
+```
 
-    ##          
-    ##                   0         1
-    ##   0-5yrs   7.983871  4.016129
-    ##   6-11yrs 79.838710 40.161290
-    ##   12+ yrs 77.177419 38.822581
+```
+##          
+##                   0         1
+##   0-5yrs   7.983871  4.016129
+##   6-11yrs 79.838710 40.161290
+##   12+ yrs 77.177419 38.822581
+```
+
 
 ## Mantel-Haenzsel
 
-It pains me to say it, but I don't think the output from R for MH analysis is as neat as that from Stata. The package epicalc had a reasonable function, `mhor()`, but has been removed from CRAN.
+It pains me to say it, but I don't think the output from R for MH analysis is as neat as that from Stata. 
+The package epicalc had a reasonable function, `mhor()`, but has been removed from CRAN.
 
 Base-r has `mantelhaen.test()` which
 
@@ -101,7 +121,8 @@ However,
 
 i.e. there one can't use `mantelhaen.test()` to identify interaction, and the p-values obtained refer to the pooled odds ratio not being equal to one.
 
-``` r
+
+```r
 library(epicalc)
 data(Oswego)
 mhor(Oswego$ill, Oswego$chocolate, Oswego$sex)
@@ -109,6 +130,7 @@ mhor(Oswego$ill, Oswego$chocolate, Oswego$sex)
 
 would return
 
+```
     Stratified analysis by  Var3 
                     OR lower lim. upper lim. P value
     Var3 F       0.417     0.0617       2.06  0.3137
@@ -117,10 +139,12 @@ would return
 
     M-H Chi2(1) = 3.51 , P value = 0.061 
     Homogeneity test, chi-squared 1 d.f. = 0.05 , P value = 0.827 
+```
 
 ## Linear regression
 
-``` r
+
+```r
 m1 <- lm(mpg ~ wt, data = mtcars)
 
 # Multiple, with ordered categorical varliable
@@ -130,76 +154,55 @@ m2 <- lm(mpg ~ wt + factor(cyl), data = mtcars)
 summary(m1)
 ```
 
-    ## 
-    ## Call:
-    ## lm(formula = mpg ~ wt, data = mtcars)
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -4.5432 -2.3647 -0.1252  1.4096  6.8727 
-    ## 
-    ## Coefficients:
-    ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  37.2851     1.8776  19.858  < 2e-16 ***
-    ## wt           -5.3445     0.5591  -9.559 1.29e-10 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 3.046 on 30 degrees of freedom
-    ## Multiple R-squared:  0.7528, Adjusted R-squared:  0.7446 
-    ## F-statistic: 91.38 on 1 and 30 DF,  p-value: 1.294e-10
+```
+## 
+## Call:
+## lm(formula = mpg ~ wt, data = mtcars)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.5432 -2.3647 -0.1252  1.4096  6.8727 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  37.2851     1.8776  19.858  < 2e-16 ***
+## wt           -5.3445     0.5591  -9.559 1.29e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.046 on 30 degrees of freedom
+## Multiple R-squared:  0.7528,	Adjusted R-squared:  0.7446 
+## F-statistic: 91.38 on 1 and 30 DF,  p-value: 1.294e-10
+```
 
-``` r
+
+```r
 # and get confidence intervals
 confint(m1)
 ```
 
-    ##                 2.5 %    97.5 %
-    ## (Intercept) 33.450500 41.119753
-    ## wt          -6.486308 -4.202635
+```
+##                 2.5 %    97.5 %
+## (Intercept) 33.450500 41.119753
+## wt          -6.486308 -4.202635
+```
 
 The summary provide R2 which gives coefficient of determination, the amount of variance in data explained by regressors. Adjusted R2, adjusts this for number of predictor variables included in model. It should be on the scale 0 to 1. However, plot of fitted values (x axis) against residuals more useful (y axis).
 
 ### Departures from linearity
 
-``` r
+
+```r
 library(ggplot2)
-```
-
-    ## Warning: package 'ggplot2' was built under R version 3.3.2
-
-``` r
 test.data <- data.frame(x = seq(1,100,1), y = seq(1,100,1))
 test.data$z <- test.data$x^2
 
 qplot(x=x, y=y, data = test.data)
 ```
 
-![](statistics_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](statistics2_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
-``` r
-qplot(x=x, y=z, data = test.data)
-```
 
-![](statistics_files/figure-markdown_github/unnamed-chunk-7-2.png)
-
-``` r
-m1 <- lm(x ~ y, data = test.data)
-m2 <- lm(x ~ y + I(y^2), data = test.data)
-anova(m1,m2)
-```
-
-    ## Analysis of Variance Table
-    ## 
-    ## Model 1: x ~ y
-    ## Model 2: x ~ y + I(y^2)
-    ##   Res.Df        RSS Df  Sum of Sq      F  Pr(>F)  
-    ## 1     98 5.4155e-27                               
-    ## 2     97 5.2558e-27  1 1.5974e-28 2.9482 0.08917 .
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Or by polynomial regression
 
 ## Polynomial regression
 
@@ -261,130 +264,128 @@ p <- ggplot(data = mtcars, aes(x = disp, y = wt)) +
 p
 ```
 
-![](statistics_files/figure-markdown_github/polynomial-1.png)<!-- -->
+![](statistics2_files/figure-html/polynomial-1.png)<!-- -->
+
+## Quantile regression
+
+## Ordinal regression
 
 
-## Obtaining the number of observations from a regression
-
-I can't believe it's taken me this long to discover
-
-``` r
-nobs(model)
+```r
+# install.packages("ordinal")
+library(ordinal)
 ```
 
-which simple returns the number of observations in a model. Easy.
-
-I haven't tested either of these, but spotted them on the web and wanted to make a note.
-
-``` r
-nrow(model.frame(lmObject))
+```
+## Warning: package 'ordinal' was built under R version 3.5.1
 ```
 
-or
-
-``` r
-length(resid(lmObject))
+```r
+data(wine)
+head(wine)
 ```
 
-## Hypothesis tests in regression models
-
-I'm putting this here as a note to self because I don't really have anywhere else to put it.
-
-> P-values corresponding to parameter estimates in computer outputs are based on Wald tests. These are directly interpretable for exposure effects that are represented by a single parameter in the regression model. p. 318-319 Kirkwood and Sterne, 2nd Ed.
-
-> Single parameter Walt tests are, however, less useful for a categorical variable, which is represented by a series of indicator variables in the regression model. \[In a regression model for the effect of social class on the rate of myocardial infarction\] Wald p-values are given for each of these five social class groups enabling them to be compared with the baseline. What is needed, however, is a combined test of the null hypothesis that social class has no influence on the rate of myocardial infarction. ... We prefer instead to use likelihood ratio tests. p. 319 Kirkwood and Sterne, 2nd Ed.
-
-## Logistic regression
-
-``` r
-data(infert)
-m1 <- glm(case ~ induced, data = infert, family = "binomial")
-m2 <- glm(case ~ induced + spontaneous, data = infert, family = "binomial")
+```
+##   response rating temp contact bottle judge
+## 1       36      2 cold      no      1     1
+## 2       48      3 cold      no      2     1
+## 3       47      3 cold     yes      3     1
+## 4       67      4 cold     yes      4     1
+## 5       77      4 warm      no      5     1
+## 6       60      4 warm      no      6     1
 ```
 
-### Likelihood ratio test
+```r
+m1 <- clm(rating ~ temp, data = wine)
+m2 <- clm(rating ~ temp + contact, data = wine)
 
-One can load the library lmtest, but `anova()` can perform likelihood ratio tests.
-
-``` r
-library(lmtest)
+anova(m1, m2)
 ```
 
-    ## Loading required package: zoo
-
-    ## 
-    ## Attaching package: 'zoo'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     as.Date, as.Date.numeric
-
-``` r
-lrtest(m2, m1)
+```
+## Likelihood ratio tests of cumulative link models:
+##  
+##    formula:                link: threshold:
+## m1 rating ~ temp           logit flexible  
+## m2 rating ~ temp + contact logit flexible  
+## 
+##    no.par    AIC  logLik LR.stat df Pr(>Chisq)    
+## m1      5 194.03 -92.013                          
+## m2      6 184.98 -86.492  11.043  1  0.0008902 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-    ## Likelihood ratio test
-    ## 
-    ## Model 1: case ~ induced + spontaneous
-    ## Model 2: case ~ induced
-    ##   #Df  LogLik Df  Chisq Pr(>Chisq)    
-    ## 1   3 -139.81                         
-    ## 2   2 -158.05 -1 36.487  1.537e-09 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+The anova above tests the null hypothesis that there is no difference in fit between the two models above. 
+There is strong evidence against the null hypothesis and so it should be rejected. 
 
-``` r
-anova(m2, m1, test = "LRT")
+The summary gives the un-exponentiated coefficients for the two variables. 
+
+
+```r
+summary(m2)
 ```
 
-    ## Analysis of Deviance Table
-    ## 
-    ## Model 1: case ~ induced + spontaneous
-    ## Model 2: case ~ induced
-    ##   Resid. Df Resid. Dev Df Deviance  Pr(>Chi)    
-    ## 1       245     279.61                          
-    ## 2       246     316.10 -1  -36.487 1.537e-09 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-### Conditional logistic regression
-
-``` r
-library(survival)
-m1 <- clogit(depvar ~ var2 + strata(match_var), data=df)
+```
+## formula: rating ~ temp + contact
+## data:    wine
+## 
+##  link  threshold nobs logLik AIC    niter max.grad cond.H 
+##  logit flexible  72   -86.49 184.98 6(0)  4.02e-12 2.7e+01
+## 
+## Coefficients:
+##            Estimate Std. Error z value Pr(>|z|)    
+## tempwarm     2.5031     0.5287   4.735 2.19e-06 ***
+## contactyes   1.5278     0.4766   3.205  0.00135 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Threshold coefficients:
+##     Estimate Std. Error z value
+## 1|2  -1.3444     0.5171  -2.600
+## 2|3   1.2508     0.4379   2.857
+## 3|4   3.4669     0.5978   5.800
+## 4|5   5.0064     0.7309   6.850
 ```
 
-### Getting the odds ratio out
+I think verbalising the interpretation of the summary output is not easy. 
+Here's my understanding. 
+A wine at baseline will have intercept odds of a rating. 
+A wine that is warm will have an odds of a 
+So, the odds of a wine being at the next level up (out of a 1-5 rating) increases by exp(2.5) [12.2203428] for warm wines compared to cold. 
 
-Best achieved with the broom package
+## Poisson regression
 
-``` r
+Poisson regression can be used to calculate incident rate ratios using either grouped data. 
+This is an example from Kirkwood and Sterne Medical Statistics (2nd Ed), p 241. 
+It compares numbers of infections among children in either good or poor quality housing. 
+The manual calculations given in Kirkwood and Sterne give a rate ratio of 2.01 (95%CI 1.19-3.39)
+
+
+```r
+lrti <- data.frame(housing = c("poor", "good"), n_lrti = c(33, 24), pyar = c(355, 518), 
+                   stringsAsFactors = FALSE)
+lrti
+```
+
+```
+##   housing n_lrti pyar
+## 1    poor     33  355
+## 2    good     24  518
+```
+
+
+```r
 library(broom)
-tidy(m2, exponentiate = TRUE, conf.int = TRUE)
+m1 <- glm(n_lrti ~ housing + offset(log(pyar)), family = "poisson", data = lrti)
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
 ```
 
-    ##          term  estimate std.error statistic      p.value  conf.low
-    ## 1 (Intercept) 0.1812532 0.2677095 -6.379528 1.776344e-10 0.1046179
-    ## 2     induced 1.5191172 0.2056274  2.033432 4.200891e-02 1.0159893
-    ## 3 spontaneous 3.3108503 0.2116433  5.656712 1.543004e-08 2.2121059
-    ##   conf.high
-    ## 1 0.2998809
-    ## 2 2.2824458
-    ## 3 5.0864647
-
-How I used to do it
-
-``` r
-orWrapper<-function(x){
-  cbind(OR = exp(coef(x)),
-        exp(confint(x)), 
-        p_val = round(summary(x)$coefficients[,4],6))
-  }
-oddsratios <- orWrapper(m1)
 ```
-
-    ## Waiting for profiling to be done...
-
-### Prediction
-
-There are two approaches to prediction (at least): base-r or broom The broom method is much cleaner and my preference. However, I'm including the old-school approach for reference.
+##          term   estimate std.error  statistic      p.value   conf.low
+## 1 (Intercept) 0.04633205 0.2041241 -15.049280 3.490122e-51 0.03017981
+## 2 housingpoor 2.00633803 0.2682717   2.595545 9.444108e-03 1.19097485
+##    conf.high
+## 1 0.06741652
+## 2 3.42986561
+```
