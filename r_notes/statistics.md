@@ -1,12 +1,14 @@
 ---
+output: 
+  html_document:
+    keep_md: true
     exclude: true
 ---
-
 
 * TOC
 {:toc}
 
-# Statistics
+# Set up
 
 
 ```r
@@ -200,9 +202,293 @@ test.data$z <- test.data$x^2
 qplot(x=x, y=y, data = test.data)
 ```
 
-![](statistics2_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](statistics_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
+## Logistic regression
 
 
+```r
+data(infert)
+library(broom)
+m1 <- glm(case ~ education + induced, data = infert, family = "binomial")
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```
+
+```
+## # A tibble: 4 x 7
+##   term             estimate std.error statistic p.value conf.low conf.high
+##   <chr>               <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+## 1 (Intercept)         0.471     0.651   -1.16     0.247    0.118      1.62
+## 2 education6-11yrs    1.04      0.655    0.0536   0.957    0.299      4.16
+## 3 education12+ yrs    1.04      0.652    0.0631   0.950    0.303      4.16
+## 4 induced             1.05      0.186    0.273    0.785    0.727      1.51
+```
+
+### Fitting an interaction
+
+This uses data from Kirkwood and Sterne, Chapter 29, p324 onwards.
+
+
+```r
+oncho <- readxl::read_xls(
+  "C:/Users/simon/Documents/r_stuff/kirkwood_and_sterne/oncho_ems.xls")
+head(oncho)
+```
+
+```
+## # A tibble: 6 x 7
+##      id    mf  area agegrp   sex mfload lesions
+##   <dbl> <dbl> <dbl>  <dbl> <dbl>  <dbl>   <dbl>
+## 1     1     1     0      2     1      1       0
+## 2     2     1     1      3     0      3       0
+## 3     3     1     0      3     1      1       0
+## 4     4     0     1      2     1      0       0
+## 5     5     0     0      3     1      0       0
+## 6     6     0     1      2     1      0       0
+```
+
+```r
+oncho$agegrp <- factor(oncho$agegrp)
+```
+
+
+```r
+m1 <- glm(mf ~ area + agegrp, data = oncho, family = "binomial")
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```
+
+```
+## # A tibble: 5 x 7
+##   term        estimate std.error statistic  p.value conf.low conf.high
+##   <chr>          <dbl>     <dbl>     <dbl>    <dbl>    <dbl>     <dbl>
+## 1 (Intercept)    0.147     0.197     -9.74 2.02e-22   0.0992     0.215
+## 2 area           3.08      0.138      8.18 2.82e-16   2.36       4.05 
+## 3 agegrp1        2.60      0.222      4.30 1.70e- 5   1.69       4.04 
+## 4 agegrp2        9.77      0.208     10.9  7.10e-28   6.54      14.8  
+## 5 agegrp3       17.6       0.216     13.3  2.48e-40  11.7       27.2
+```
+
+The output above matches the values in table 29.3, bottom of p324. 
+Now fit a model with an interaction term:
+
+
+```r
+m2 <- glm(mf ~ area * agegrp, data = oncho, family = "binomial")
+tidy(m2, exponentiate = TRUE, conf.int = TRUE)
+```
+
+```
+## # A tibble: 8 x 7
+##   term         estimate std.error statistic  p.value conf.low conf.high
+##   <chr>           <dbl>     <dbl>     <dbl>    <dbl>    <dbl>     <dbl>
+## 1 (Intercept)     0.208     0.275    -5.72  1.07e- 8    0.117     0.346
+## 2 area            1.83      0.349     1.73  8.36e- 2    0.933     3.69 
+## 3 agegrp1         2.12      0.375     2.00  4.57e- 2    1.02      4.48 
+## 4 agegrp2         6.96      0.309     6.28  3.30e-10    3.89     13.1  
+## 5 agegrp3        10.5       0.319     7.36  1.81e-13    5.74     20.2  
+## 6 area:agegrp1    1.39      0.463     0.708 4.79e- 1    0.557     3.44 
+## 7 area:agegrp2    1.66      0.415     1.23  2.20e- 1    0.730     3.73 
+## 8 area:agegrp3    2.59      0.438     2.17  2.99e- 2    1.09      6.09
+```
+
+As decsribed in the text, the model now has eight parameters (equal to the number of area and age subgroups multiplied together).
+Again, the output from this matches that in table 29.4, part b. 
+
+As described in the text, the interaction parameter allows the effect of area to be different across the different age groups. 
+To calculate the odds ratio for the effect of area in the first age group, one can do 
+$\mbox{area} \times \mbox{area:factor(agegroup)1} = $
+$1.83 \times 1.39 = 2.54$
+
+And this is fine, but we want to go a bit further and do this more systematically, rather than relying on our manual calculations. 
+
+
+```r
+library(multcomp)
+```
+
+```
+## Warning: package 'multcomp' was built under R version 3.6.1
+```
+
+```
+## Warning: package 'TH.data' was built under R version 3.6.1
+```
+
+```r
+summary(glht(m2, linfct = c("area + area:agegrp1 = 1")))
+```
+
+```
+## 
+## 	 Simultaneous Tests for General Linear Hypotheses
+## 
+## Fit: glm(formula = mf ~ area * agegrp, family = "binomial", data = oncho)
+## 
+## Linear Hypotheses:
+##                          Estimate Std. Error z value Pr(>|z|)
+## area + area:agegrp1 == 1   0.9307     0.3049  -0.227     0.82
+## (Adjusted p values reported -- single-step method)
+```
+
+```r
+summary(glht(m2, linfct = c("area + area:agegrp1 = 1", 
+                            "area + area:agegrp2 = 1", "area + area:agegrp3 = 1")))
+```
+
+```
+## 
+## 	 Simultaneous Tests for General Linear Hypotheses
+## 
+## Fit: glm(formula = mf ~ area * agegrp, family = "binomial", data = oncho)
+## 
+## Linear Hypotheses:
+##                          Estimate Std. Error z value Pr(>|z|)
+## area + area:agegrp1 == 1   0.9307     0.3049  -0.227    0.994
+## area + area:agegrp2 == 1   1.1121     0.2249   0.498    0.944
+## area + area:agegrp3 == 1   1.5539     0.2653   2.088    0.106
+## (Adjusted p values reported -- single-step method)
+```
+
+Getting the confidence intervals out is not tricky, just wrap the `glht()` in `confint()`.
+Getting the exponentiated for out is tricky though.
+
+
+```r
+# tried converting to dataframe - won't work. Can I extract with purrr
+# Also fails:
+# library(purrr)
+# map(t, "Estimate")
+t <- glht(m2, linfct = c("area + area:agegrp1 = 1"))
+s <- confint(t)
+s
+```
+
+```
+## 
+## 	 Simultaneous Confidence Intervals
+## 
+## Fit: glm(formula = mf ~ area * agegrp, family = "binomial", data = oncho)
+## 
+## Quantile = 1.96
+## 95% family-wise confidence level
+##  
+## 
+## Linear Hypotheses:
+##                          Estimate lwr    upr   
+## area + area:agegrp1 == 1 0.9307   0.3332 1.5282
+```
+
+```r
+names(s)
+```
+
+```
+## [1] "model"       "linfct"      "rhs"         "coef"        "vcov"       
+## [6] "df"          "alternative" "type"        "confint"
+```
+
+```r
+s$confint
+```
+
+```
+##                      Estimate       lwr      upr
+## area + area:agegrp1 0.9306795 0.3331821 1.528177
+## attr(,"conf.level")
+## [1] 0.95
+## attr(,"calpha")
+## [1] 1.959964
+```
+
+```r
+names(s$confint)
+```
+
+```
+## NULL
+```
+
+```r
+str(s$confint)
+```
+
+```
+##  num [1, 1:3] 0.931 0.333 1.528
+##  - attr(*, "dimnames")=List of 2
+##   ..$ : chr "area + area:agegrp1"
+##   ..$ : chr [1:3] "Estimate" "lwr" "upr"
+##  - attr(*, "conf.level")= num 0.95
+##  - attr(*, "calpha")= num 1.96
+```
+
+```r
+s$confint[1:3]
+```
+
+```
+## [1] 0.9306795 0.3331821 1.5281768
+```
+
+```r
+exp(s$confint[1:3])
+```
+
+```
+## [1] 2.536232 1.395401 4.609765
+```
+
+The exponentiated value is close enough to that calculated above and given in Kirkwood and Sterne. 
+
+Does this work across all the combinations
+
+```r
+s <- confint(glht(m2, linfct = c("area + area:agegrp1 = 1", 
+                            "area + area:agegrp2 = 1", "area + area:agegrp3 = 1")))
+s
+```
+
+```
+## 
+## 	 Simultaneous Confidence Intervals
+## 
+## Fit: glm(formula = mf ~ area * agegrp, family = "binomial", data = oncho)
+## 
+## Quantile = 2.3876
+## 95% family-wise confidence level
+##  
+## 
+## Linear Hypotheses:
+##                          Estimate lwr    upr   
+## area + area:agegrp1 == 1 0.9307   0.2028 1.6585
+## area + area:agegrp2 == 1 1.1121   0.5751 1.6490
+## area + area:agegrp3 == 1 1.5539   0.9206 2.1873
+```
+
+```r
+s$confint[1:3, ]
+```
+
+```
+##                      Estimate       lwr      upr
+## area + area:agegrp1 0.9306795 0.2028199 1.658539
+## area + area:agegrp2 1.1120714 0.5751206 1.649022
+## area + area:agegrp3 1.5539250 0.9205693 2.187281
+```
+
+```r
+exp(s$confint[1:3, ])
+```
+
+```
+##                     Estimate      lwr      upr
+## area + area:agegrp1 2.536232 1.224852 5.251633
+## area + area:agegrp2 3.040650 1.777345 5.201891
+## area + area:agegrp3 4.729999 2.510719 8.910949
+```
+
+Yes, it does. 
+
+Interactions: Done.
 
 ## Polynomial regression
 
@@ -264,7 +550,7 @@ p <- ggplot(data = mtcars, aes(x = disp, y = wt)) +
 p
 ```
 
-![](statistics2_files/figure-html/polynomial-1.png)<!-- -->
+![](statistics_files/figure-html/polynomial-1.png)<!-- -->
 
 ## Quantile regression
 
@@ -277,7 +563,7 @@ library(ordinal)
 ```
 
 ```
-## Warning: package 'ordinal' was built under R version 3.5.1
+## Warning: package 'ordinal' was built under R version 3.6.1
 ```
 
 ```r
@@ -382,10 +668,9 @@ tidy(m1, exponentiate = TRUE, conf.int = TRUE)
 ```
 
 ```
-##          term   estimate std.error  statistic      p.value   conf.low
-## 1 (Intercept) 0.04633205 0.2041241 -15.049280 3.490122e-51 0.03017981
-## 2 housingpoor 2.00633803 0.2682717   2.595545 9.444108e-03 1.19097485
-##    conf.high
-## 1 0.06741652
-## 2 3.42986561
+## # A tibble: 2 x 7
+##   term        estimate std.error statistic  p.value conf.low conf.high
+##   <chr>          <dbl>     <dbl>     <dbl>    <dbl>    <dbl>     <dbl>
+## 1 (Intercept)   0.0463     0.204    -15.0  3.49e-51   0.0302    0.0674
+## 2 housingpoor   2.01       0.268      2.60 9.44e- 3   1.19      3.43
 ```

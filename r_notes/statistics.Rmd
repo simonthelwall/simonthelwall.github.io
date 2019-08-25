@@ -1,11 +1,18 @@
 ---
+title: "Common statistical tasks with R"
 output: 
   html_document:
-    keep_md: true
-    exclude: true
+  keep_md: true
+  exclude: true
+  toc: true
+  toc_float: true
+  toc_collapsed: true
+toc_depth: 3
+number_sections: true
+theme: lumen
 ---
 
-# Statistics
+# Set up
 
 ```{r, setup, echo = TRUE}
 library(ggplot2)
@@ -113,7 +120,92 @@ test.data$z <- test.data$x^2
 qplot(x=x, y=y, data = test.data)
 ```
 
+## Logistic regression
 
+```{r binomial}
+data(infert)
+library(broom)
+m1 <- glm(case ~ education + induced, data = infert, family = "binomial")
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```
+
+### Fitting an interaction
+
+This uses data from Kirkwood and Sterne, Chapter 29, p324 onwards.
+
+```{r onco-data}
+oncho <- readxl::read_xls(
+  "C:/Users/simon/Documents/r_stuff/kirkwood_and_sterne/oncho_ems.xls")
+head(oncho)
+oncho$agegrp <- factor(oncho$agegrp)
+```
+
+```{r model-no-interaction}
+m1 <- glm(mf ~ area + agegrp, data = oncho, family = "binomial")
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```
+
+The output above matches the values in table 29.3, bottom of p324. 
+Now fit a model with an interaction term:
+
+```{r interaction}
+m2 <- glm(mf ~ area * agegrp, data = oncho, family = "binomial")
+tidy(m2, exponentiate = TRUE, conf.int = TRUE)
+```
+
+As decsribed in the text, the model now has eight parameters (equal to the number of area and age subgroups multiplied together).
+Again, the output from this matches that in table 29.4, part b. 
+
+As described in the text, the interaction parameter allows the effect of area to be different across the different age groups. 
+To calculate the odds ratio for the effect of area in the first age group, one can do 
+$\mbox{area} \times \mbox{area:factor(agegroup)1} = $
+$1.83 \times 1.39 = 2.54$
+
+And this is fine, but we want to go a bit further and do this more systematically, rather than relying on our manual calculations. 
+
+```{r glht, message=FALSE}
+library(multcomp)
+summary(glht(m2, linfct = c("area + area:agegrp1 = 1")))
+
+summary(glht(m2, linfct = c("area + area:agegrp1 = 1", 
+                            "area + area:agegrp2 = 1", "area + area:agegrp3 = 1")))
+```
+
+Getting the confidence intervals out is not tricky, just wrap the `glht()` in `confint()`.
+Getting the exponentiated for out is tricky though.
+
+```{r or-interaction}
+# tried converting to dataframe - won't work. Can I extract with purrr
+# Also fails:
+# library(purrr)
+# map(t, "Estimate")
+t <- glht(m2, linfct = c("area + area:agegrp1 = 1"))
+s <- confint(t)
+s
+names(s)
+s$confint
+names(s$confint)
+str(s$confint)
+s$confint[1:3]
+exp(s$confint[1:3])
+
+```
+
+The exponentiated value is close enough to that calculated above and given in Kirkwood and Sterne. 
+
+Does this work across all the combinations
+```{r exp-int-confint}
+
+s <- confint(glht(m2, linfct = c("area + area:agegrp1 = 1", 
+                            "area + area:agegrp2 = 1", "area + area:agegrp3 = 1")))
+s
+s$confint[1:3, ]
+exp(s$confint[1:3, ])
+```
+
+Yes, it does. 
+
+Interactions: Done.
 
 ## Polynomial regression
 
