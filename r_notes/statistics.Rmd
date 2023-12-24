@@ -273,3 +273,9 @@ library(broom)
 m1 <- glm(n_lrti ~ housing + offset(log(pyar)), family = "poisson", data = lrti)
 tidy(m1, exponentiate = TRUE, conf.int = TRUE)
 ```
+
+The result from the regression is the same as would be obtained in a 2x2 table:
+
+```{r poisson-2-2}
+(33/355)/(24/518)
+```
