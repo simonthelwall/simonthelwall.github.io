@@ -1,0 +1,75 @@
+---
+title: "Interactions in R"
+format: html
+editor: visual
+---
+
+``` r
+#| echo: false
+dat <- read.csv("D:/documents/misc_r_stuff/essential_medical_statistics/datasets/datasets/oncho_ems.csv")
+```
+
+## Background
+
+Calculating stratum specific odds ratios in R has been really difficult for a long time. It pains me to say it but Stata does a better job with the lincom command. However, I've finally found the excellent [marginaleffects](https://marginaleffects.com/) package. This has simple methods for calculating stratum-specific odds ratios.
+
+## Data and methods
+
+To ensure that marginaleffects is producing the outputs that I expect, I'm going to replicate the analyses on pages 323 to 327 of Kirkwood and Sterne's Essential Medical Statistics. I'm using the oncho_ems data set that can be downloaded [here](https://resources.learning.wiley.com/isbn/9781444392845).
+
+These data give 1302 observations on the presence or absence of microfilaria in individuals as a binary variable (`mf`), area of residence (0, 1 or 2) and age group (0, 1, 2 or 3).
+
+``` r
+head(dat)
+```
+
+I'm going to use the Broom package to get tidy outputs from a regression model and marginaleffects to get stratum-specific odds ratios.
+
+``` r
+library(broom)
+library(marginaleffects)
+```
+
+## Replication of the model with no interaction
+
+This is quite straightforward, a simple logistic regression model:
+
+``` r
+m1 <- glm(mf ~ area + factor(agegrp), data = dat, family = binomial)
+tidy(m1, exponentiate = TRUE, conf.int = TRUE)
+```
+
+which matches the output in table 29.3(b), p324.
+
+## Replication of the model with an interaction between the two exposures
+
+The above analysis assumes that the effect of age is the same for each of the different areas. This may not be true, so we need to specify a different model to allow the effect of age to vary according to area
+
+``` r
+m2 <- glm(mf ~ area * factor(agegrp), data = dat, family = binomial) 
+tidy(m2, exponentiate = TRUE, conf.int = TRUE)
+```
+
+In this output, there are now three extra estimates, we can use these to calculate stratum-specific odds ratios for the effect of area on mf infection. At the bottom of page 3 it works this for the effect of area in age group 1:
+
+> OR for area in age group 1 = Area x Area.Agegrp(1)
+>
+> = 1.8275 x 1.3878 = 2.5362
+
+Allowing for some rounding differences, this matches our output above, the OR for area in our tidied output is 1.83 and the OR for the combination of area and age group 1 (`area:factor(agegrp)1`) is 1.39.
+
+So, we can use these values to calculate stratum-specific odds ratios. But, I don't want to treat R link a hand-held calculator, I want a table of the stratum-specific odds ratios that I can easily plug into a manuscript or report for publication. This is the step that has been tricky until I learned to do it with marginaleffects.
+
+``` r
+comparisons(m2, variables = "area", newdata = datagrid(agegrp = c(0,1,2,3)), transform = "exp", comparison = "lnor")
+```
+
+This output replicates the stratum-specific odds ratios for the effect of area, at each age group, as given at the bottom of p326:
+
+> OR for area in age group 2 = Area x Area.Agegrp(2)
+>
+> = 1.8275 x 1.6638 = 3.0406
+>
+> OR for area in age group 2 = Area x Area.Agegrp(3)
+>
+> = 1.8275 x 2.5881 = 4.7300

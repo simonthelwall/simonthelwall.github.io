@@ -1,0 +1,185 @@
+---
+title: "OctopusR for optimising household energy use"
+author: "Simon Thelwall"
+format:
+  html:
+    code-fold: true
+editor: visual
+---
+
+## Background
+
+I've got solar PV, battery storage, an ASHP and an EV. Finding the right energy tariff to get the most electricity for my use isn't straightforward. I'm with Octopus Energy, and they have a whole load of different tariffs.
+
+Fortunately, Octopus being the modern sort of a company, they have an API which customers can query and, fortunately, there's an R package OctopusR which interfaces with that API to make my life easy. I'm going to use that package to look at my electricty usage over the last year and hopefully optimise my tariff choices and battery settings.
+
+## Methods
+
+The OctopusR package is available on [CRAN](https://cran.r-project.org/web/packages/octopusR/index.html), the code is on [GitHub](https://github.com/Moohan/octopusR/) and there are nice github pages on the package [here](https://moohan.github.io/octopusR/).
+
+To access the API, you need the API key for your account, the MPAN numbers for your meters and the meter serial number. There's documentation on the API on the [Octopus developer pages](https://developer.octopus.energy/) and Guy Lipman has a [nice write-up on his blog](https://www.guylipman.com/octopus/api_guide.html).
+
+If you have PV, then you have two MPAN numbers, one for import from the grid and one for export. Octopus don't tell you which is which, but the data make it obvious.
+
+I'm going to use the `get_consumption()` function to pull my consumption and export data for the calendar year 2024 into R and do some basic calculations with dplyr. With that data, and some transcribed data about tariff costs for my local area I should be able to find the best tariff for me.
+
+```{r setup}
+#| message: false
+#| warning: false
+#| lst-cap: Retrieve consumption and export data and display sample rows of data
+
+library(octopusR)
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(lubridate)
+
+# I've got my api key and mpan numbers stored in text files so that they're not exposed here.
+set_api_key(readLines(con = "../api_key.txt"))
+set_meter_details(meter_type = "electricity",
+                  mpan_mprn = readLines("../elec_mtr_mpan.txt"),
+                  serial_number = readLines("../elec_mtr_srl_num.txt"))
+exp_mpan <- readLines("../elec_mtr_mpan_exprt.txt")
+
+# consumption data
+elec_use <- get_consumption(meter_type = "elec", tz = "GMT", 
+                            period_from = dmy("01-01-2024"),
+                            period_to = dmy("31-12-2024"), 
+                            group_by = "hour") %>% 
+  mutate(mnth = month(interval_start), hr = hour(interval_start))
+head(elec_use)
+
+# export data
+elec_exp <- get_consumption(meter_type = "elec", tz = "GMT", 
+                             mpan_mprn = exp_mpan, 
+                             period_from = dmy("01-01-2024"),
+                             period_to = dmy("31-12-2024"), 
+                             group_by = "hour") %>% 
+  mutate(mnth = month(interval_start), hr = hour(interval_start))
+head(elec_exp)
+```
+
+There is an [API endpoint](https://developer.octopus.energy/rest/guides/endpoints#api-price-endpoints) that gives prices for the Agile and Go tariffs, but there isn't an R function for that yet, so I haven't used it here. I have checked the Octopus website for the current (late February) prices for my local area (East England).
+
+```{r tarif-prices}
+#| message: false
+
+elec_use <- elec_use %>% 
+  mutate(flex_cost = consumption * 0.2557, 
+         aira_zero_cost = case_when(
+           # 
+           between(hour(interval_start), 16, 19) ~ consumption * 0.4047, 
+           between(hour(interval_start), 4, 7)   ~ consumption * 0.1323, 
+           between(hour(interval_start), 13, 16)   ~ consumption * 0.1323,
+           between(hour(interval_start), 22, 00) ~ consumption * 0.1323, 
+           TRUE ~ consumption * 0.2698 
+         ),
+         flux_cost = case_when(
+           # https://octopus.energy/smart/flux/
+           between(hour(interval_start), 02, 05) ~ consumption * 0.1534, 
+           between(hour(interval_start), 16, 19) ~ consumption * 0.2744, 
+           TRUE ~ consumption * 0.2557
+         ), 
+         go_cost = case_when(
+           # https://octopus.energy/smart/go/
+           between(hour(interval_start), 01, 05) ~ consumption * 0.085, 
+           TRUE ~ consumption * 0.271
+         ),
+         intel_go_cost = case_when(
+           # https://octopus.energy/smart/go/
+           between(hour(interval_start), 00, 05) ~ consumption * 0.07, 
+           TRUE ~ consumption * 0.271
+         )
+         )
+```
+
+## Results
+
+### Consumption costs under different tariffs
+
+*Total cost (£) per calendar month, 2024*
+
+```{r cost-by-month}
+#| message: false
+#| warning: false
+
+elec_cost <- elec_use %>% 
+  group_by(mnth) %>% 
+  summarise(across(.cols = c(flex_cost, aira_zero_cost, flux_cost, go_cost, 
+                             intel_go_cost), .fns = sum)) %>% 
+  mutate(across(.cols = c(flex_cost, aira_zero_cost, flux_cost, go_cost, 
+                             intel_go_cost), .fns = round, digits = 2))
+elec_cost
+
+```
+
+So, for January, I could have saved myself £`{r} elec_cost$flex_cost[1] - elec_cost$intel_go_cost[1]` if I had been on the Intelligent Go tariff, rather than the Flexible tariff.
+
+Over the year, these different costs sum to:
+
+```{r cost-by-year}
+#| message: false
+#| warning: false
+
+elec_cost_yr <- elec_use %>% 
+  summarise(across(.cols = c(flex_cost, aira_zero_cost, flux_cost, go_cost, 
+                             intel_go_cost), .fns = sum)) %>% 
+  mutate(across(.cols = c(flex_cost, aira_zero_cost, flux_cost, go_cost, 
+                             intel_go_cost), .fns = round, digits = 2))
+elec_cost_yr
+```
+
+So, with the Intelligent Go tariff, I could have saved myself £`{r} elec_cost_yr$flex_cost[1] - elec_cost_yr$intel_go_cost[1]` (`{r} round(((elec_cost_yr$flex_cost[1] - elec_cost_yr$intel_go_cost[1]) / elec_cost_yr$flex_cost[1]) * 100, 1)`%), which is rather less that I had hoped for.
+
+However, I haven't factored in the daily standing charge, but these are the same for both tariffs at 48.70p / day.
+
+### Savings by altering my battery plan
+
+I've got a 10 kWh battery system. If I set that to charge on a cheap overnight tariff and then discharge it when that cheap overnight tariff runs out, how much will I save?
+
+I'm not quite sure how to calculate this, but if, per day, my kWh is \> 10, I can shift that 10 kWh to the night time load.
+
+So, below I've generated an altered consumption column where the load is 10 kWh lower if it's in the peak period for Intelligent Go and 10 kWh higher in the off-peak period and then used these values to calculate the cost in £.
+
+```{r battery}
+#| message: false
+#| echo: true
+
+elec_cost_yr_batt <- elec_use %>% 
+  mutate(dt = format(interval_start, "%Y-%m-%d"), 
+         low_cost_hr = if_else(between(hour(interval_start), 00, 05), 1, 0)) %>%
+  group_by(low_cost_hr, dt) %>%
+  summarise(consumption = sum(consumption)) %>% 
+  ungroup() %>% 
+  arrange(dt, low_cost_hr) %>% 
+  mutate(gt_10_kwh = if_else(low_cost_hr == 0 & consumption >= 10, 1, 0)) %>% 
+  group_by(dt) %>% 
+  mutate(gt_10_day = max(gt_10_kwh)) %>% 
+  ungroup() %>% 
+  mutate(consumption_2 = case_when(
+    low_cost_hr == 0 & gt_10_day == 1 ~ consumption - 10, 
+    low_cost_hr == 0 & gt_10_day == 0 ~ 0,
+    low_cost_hr == 1                  ~ consumption + 10
+      ), 
+    intel_go_cost = if_else(low_cost_hr == 1, 
+                            consumption_2 * 0.07, 
+                            consumption_2 * 0.271)
+    )
+
+# table(is.na(elec_cost_yr_batt$intel_go_cost))
+head(elec_cost_yr_batt)
+```
+
+Over the year, this would sum to £`{r} round(sum(elec_cost_yr_batt$intel_go_cost), 2)` on the Intelligent Go tariff. A further saving of £`{r} elec_cost_yr$intel_go_cost[1] - round(sum(elec_cost_yr_batt$intel_go_cost), 2)`.
+
+## Discussion
+
+I can save myself £`{r} elec_cost_yr$intel_go_cost[1] - round(sum(elec_cost_yr_batt$intel_go_cost), 2) + elec_cost_yr$flex_cost[1] - elec_cost_yr$intel_go_cost[1]`, assuming that my energy use is similar in 2025 to my use in 2024. I did buy an EV in May 2024, so that may alter the total consumption, but it is only likely to tip it further in favour of Intelligent Go since I can schedule the EV charging for the cheap overnight rate. Scheduling consumption to early in the morning has the added advantage of less carbon-intensive too.[^1]
+
+[^1]: https://www.wwf.org.uk/challenges/green-energy-time
+
+One thing that I haven't modelled here is the effect of charging the batteries at the off-peak rate in the summer. In those periods, I'm probably not going to exhaust the batteries before charging starts (unless the ashp is on a Legionella cycle or a hot-water cycle) and thus a, it won't take the full 10 kWh from the grid to reach max charge and b, I'll start exporting to the grid a lot earlier. This is beyond what I want to spend my spare time on but means that the savings presented here are likely to be slightly underestimate the actual savings.
+
+I love the fact that Octopus Energy have an API where I can check this sort of thing. I also love the fact that someone has been nerdy enough to write an R package to make it easy to interact with the API.
+
+I think my analyses here are accurate, but if you spot any errors please create an issue on the github repo.

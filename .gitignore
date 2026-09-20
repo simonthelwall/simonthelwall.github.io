@@ -31,3 +31,4 @@ r_notes/ggplot2.html
 *.utf8.md
 *.knit.md
 .Rproj.user
+.positai
