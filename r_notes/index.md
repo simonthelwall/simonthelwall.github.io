@@ -14,6 +14,7 @@ description: Some notes about using R in a fairly disorganised collection
  - [dplyr](dplyr.md)
  - [ggplot2](ggplot2.md)
  - [statistics](statistics.md)
+ - [interactions](interactions.md)
  - [report production in R](repro.md)
  - [bookdown](bookdown.md)
  - [spatial statistics](spatial_stats.md)
